@@ -1,0 +1,122 @@
+# =============================================================================
+# Kong OSS Helm Values — kong/kong
+#
+# Mode (ingress/gateway) and DB mode (dbless/postgres) are overridden
+# at install time via --set flags in install-kong.sh.
+#
+# No routes, services, or plugins are configured here — dev team wires
+# these post-deploy via Kong Admin API or KongPlugin CRDs.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Image
+# ---------------------------------------------------------------------------
+image:
+  repository: kong
+  tag: "3.6"     # OSS tag (no -enterprise suffix)
+  pullPolicy: IfNotPresent
+
+# ---------------------------------------------------------------------------
+# Deployment
+# ---------------------------------------------------------------------------
+replicaCount: 1  # Scale up post-POC
+
+# ---------------------------------------------------------------------------
+# Kong environment variables
+# DB mode and database connection are set via --set at install time.
+# ---------------------------------------------------------------------------
+env:
+  # Prefix for all log entries
+  prefix: /tmp/kong_prefix/
+
+  # Logging
+  proxy_access_log: /dev/stdout
+  proxy_error_log: /dev/stderr
+  admin_access_log: /dev/stdout
+  admin_error_log: /dev/stderr
+  log_level: info
+
+  # Trusted IPs — needed for X-Forwarded-For in NKP LB environments
+  trusted_ips: "0.0.0.0/0,::/0"
+  real_ip_recursive: "on"
+
+# ---------------------------------------------------------------------------
+# Proxy service — port and type overridden at install time
+# ---------------------------------------------------------------------------
+proxy:
+  enabled: true
+  annotations: {}
+  http:
+    enabled: true
+    servicePort: 80
+    containerPort: 8000
+  tls:
+    enabled: false   # Plaintext for POC; enable and add certs later
+
+# ---------------------------------------------------------------------------
+# Admin API — ClusterIP only (not exposed externally by default)
+# Expose this only if you need remote Admin API access.
+# ---------------------------------------------------------------------------
+admin:
+  enabled: true
+  type: ClusterIP
+  http:
+    enabled: true
+    servicePort: 8001
+    containerPort: 8001
+  tls:
+    enabled: false
+
+# ---------------------------------------------------------------------------
+# Kong Manager (OSS) — disabled in DB-less mode; only meaningful with Postgres
+# ---------------------------------------------------------------------------
+manager:
+  enabled: false
+
+# ---------------------------------------------------------------------------
+# Kong Ingress Controller (KIC) — enabled when KONG_MODE=ingress
+# Overridden at install time. Listed here for reference defaults.
+# ---------------------------------------------------------------------------
+ingressController:
+  enabled: true
+  installCRDs: true
+  env:
+    kong_admin_url: "http://localhost:8001"
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+  limits:
+    cpu: "2"
+    memory: "1Gi"
+
+# ---------------------------------------------------------------------------
+# Probes
+# ---------------------------------------------------------------------------
+readinessProbe:
+  httpGet:
+    path: /status
+    port: 8100
+    scheme: HTTP
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  failureThreshold: 3
+
+livenessProbe:
+  httpGet:
+    path: /status
+    port: 8100
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+
+# ---------------------------------------------------------------------------
+# Pod disruption budget
+# ---------------------------------------------------------------------------
+podDisruptionBudget:
+  enabled: false  # Enable when replicaCount > 1

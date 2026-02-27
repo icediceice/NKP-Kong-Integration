@@ -1,0 +1,61 @@
+# =============================================================================
+# Confluent Control Center Helm Values — confluentinc/cp-enterprise-control-center
+#
+# Control Center is the Confluent management UI for Kafka.
+# Kafka bootstrap, persistence size, and service type are overridden
+# at install time via --set in install-kafka.sh.
+#
+# Note: Control Center requires a Confluent Platform license.
+# Without a license it runs in a 30-day evaluation/trial mode.
+# =============================================================================
+
+cp-enterprise-control-center:
+  # ---------------------------------------------------------------------------
+  # Replica count — 1 is sufficient for POC
+  # ---------------------------------------------------------------------------
+  replicaCount: 1
+
+  # ---------------------------------------------------------------------------
+  # Web UI port
+  # ---------------------------------------------------------------------------
+  port: 9021
+
+  # ---------------------------------------------------------------------------
+  # Persistence (state store for topic/consumer metadata)
+  # storageClass and size overridden at install time
+  # ---------------------------------------------------------------------------
+  persistence:
+    enabled: true
+
+  # ---------------------------------------------------------------------------
+  # Probes — Control Center is slow to start; give it extra time
+  # ---------------------------------------------------------------------------
+  readinessProbe:
+    initialDelaySeconds: 120
+    periodSeconds: 20
+    failureThreshold: 6
+
+  livenessProbe:
+    initialDelaySeconds: 180
+    periodSeconds: 30
+    failureThreshold: 4
+
+  # ---------------------------------------------------------------------------
+  # Resources — Control Center is memory-heavy
+  # ---------------------------------------------------------------------------
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+  # ---------------------------------------------------------------------------
+  # Connect clusters to monitor (leave empty — team wires post-deploy)
+  # ---------------------------------------------------------------------------
+  controlcenter:
+    connect:
+      cluster: ""
+    ksql:
+      url: ""

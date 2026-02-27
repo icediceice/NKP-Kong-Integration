@@ -1,0 +1,81 @@
+# =============================================================================
+# Kafka KRaft Helm Values — confluentinc/cp-kafka
+# KRaft mode: no ZooKeeper, combined broker+controller roles
+#
+# Dynamic values (broker count, image, storage, resources) are overridden
+# via --set flags in install-kafka.sh. This file holds static config.
+# =============================================================================
+
+cp-kafka:
+  # ---------------------------------------------------------------------------
+  # KRaft mode — disable ZooKeeper dependency
+  # ---------------------------------------------------------------------------
+  # Enable KRaft (Kafka Raft metadata mode, requires Confluent 7.4+)
+  kraft:
+    enabled: true
+
+  # ZooKeeper not used in KRaft mode
+  zookeeper:
+    enabled: false
+
+  # ---------------------------------------------------------------------------
+  # Process roles — combined broker+controller for simplest POC topology
+  # ---------------------------------------------------------------------------
+  configurationOverrides:
+    # Each pod acts as both broker and controller
+    "process.roles": "broker,controller"
+
+    # Listeners: PLAINTEXT for internal cluster traffic, CONTROLLER for KRaft
+    "listeners": "PLAINTEXT://:9092,CONTROLLER://:9093"
+    "listener.security.protocol.map": "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
+    "inter.broker.listener.name": "PLAINTEXT"
+    "controller.listener.names": "CONTROLLER"
+
+    # Advertised listeners use pod DNS within the cluster
+    # (broker-hostname is templated by the chart)
+    "log.retention.hours": "168"       # 7 days retention
+    "log.segment.bytes": "1073741824"  # 1Gi segments
+    "num.partitions": "1"              # default partition count for new topics
+    "default.replication.factor": "3"  # requires 3 brokers
+    "min.insync.replicas": "2"         # strong durability guarantee
+
+  # ---------------------------------------------------------------------------
+  # Persistence (per-broker PVC)
+  # Overridden at install time: storageClass, size
+  # ---------------------------------------------------------------------------
+  persistence:
+    enabled: true
+
+  # ---------------------------------------------------------------------------
+  # Probes — give KRaft time to elect leader before marking ready
+  # ---------------------------------------------------------------------------
+  readinessProbe:
+    initialDelaySeconds: 45
+    periodSeconds: 10
+    failureThreshold: 6
+
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    failureThreshold: 4
+
+  # ---------------------------------------------------------------------------
+  # Pod disruption budget — keep at least 2 brokers up during rolling ops
+  # ---------------------------------------------------------------------------
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+
+  # ---------------------------------------------------------------------------
+  # Monitoring (JMX exporter for Prometheus scraping)
+  # Disabled by default for minimal POC footprint — enable when ready
+  # ---------------------------------------------------------------------------
+  prometheus:
+    jmx:
+      enabled: false
+
+  # ---------------------------------------------------------------------------
+  # Headless service for pod-level DNS (required for StatefulSet)
+  # ---------------------------------------------------------------------------
+  headless:
+    port: 9092

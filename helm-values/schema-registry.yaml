@@ -1,0 +1,50 @@
+# =============================================================================
+# Schema Registry Helm Values — confluentinc/cp-schema-registry
+#
+# Schema Registry provides Avro/JSON/Protobuf schema management for Kafka.
+# Kafka bootstrap and service type are overridden at install time via --set.
+# =============================================================================
+
+cp-schema-registry:
+  # ---------------------------------------------------------------------------
+  # Replica count — 1 for POC; increase for HA
+  # ---------------------------------------------------------------------------
+  replicaCount: 1
+
+  # ---------------------------------------------------------------------------
+  # Schema Registry port
+  # ---------------------------------------------------------------------------
+  servicePort: 8081
+
+  # ---------------------------------------------------------------------------
+  # Schema compatibility mode
+  # BACKWARD: new schema can read old data (default, safe)
+  # FULL: both forward and backward compatible
+  # NONE: no compatibility checking
+  # ---------------------------------------------------------------------------
+  configurationOverrides:
+    "schema.compatibility.level": "BACKWARD"
+
+  # ---------------------------------------------------------------------------
+  # Resources
+  # ---------------------------------------------------------------------------
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+
+  # ---------------------------------------------------------------------------
+  # Probes
+  # ---------------------------------------------------------------------------
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 4
+
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    failureThreshold: 3
