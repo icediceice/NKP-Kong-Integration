@@ -1,7 +1,7 @@
 # Project: NKP-Kong-Integration (Kongka Stack)
 
 > Initialized: 2026-02-27 00:00
-> Last updated: 2026-02-28 00:00
+> Last updated: 2026-02-28 10:00
 
 ## Current Focus
 
@@ -20,6 +20,12 @@ Upcoming work in priority order:
 ## Work Log
 
 ### 2026-02-28
+
+#### 10:00 — Discipline re-audit (project-init)
+- **What:** Re-ran project-init skill. All 9 CLAUDE.md sections intact. All tooling present
+  (crwl, nlm). 9 docs in docs/reference/ including nutanix-nkp-get-started.md. No gaps found.
+- **Files:** `PROGRESS.md`
+- **Next:** Protocol/integration wiring (Kafka ↔ Kong)
 
 #### 01:00 — Doc library scraped and uploaded
 - **What:** Scraped 8 official doc sources into `docs/reference/` using crawl4ai. Uploaded
