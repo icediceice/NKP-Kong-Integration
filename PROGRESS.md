@@ -1,7 +1,7 @@
 # Project: NKP-Kong-Integration (Kongka Stack)
 
 > Initialized: 2026-02-27 00:00
-> Last updated: 2026-02-28 11:30
+> Last updated: 2026-02-28 12:00
 
 ## Current Focus
 
@@ -20,6 +20,14 @@ Upcoming work in priority order:
 ## Work Log
 
 ### 2026-02-28
+
+#### 12:00 — NKP docs added from GitHub mirror
+- **What:** Fetched NKP 2.17 docs from icediceice/Nutanix-MD-Doc (portal is JS/auth-gated).
+  Bundled 18 topic pages into 5 targeted files covering the areas this project needs:
+  get-started, prerequisites, storage (for Kafka PVCs), MetalLB/LoadBalancer (for Kong),
+  and Nutanix cluster creation. All 5 uploaded to NotebookLM. Notebook now has 13 sources.
+- **Files:** `docs/reference/nutanix-nkp-*.md` (5 new files)
+- **Next:** Protocol/integration wiring (Kafka ↔ Kong)
 
 #### 11:30 — Discipline re-audit (project-init)
 - **What:** Re-ran project-init. Found docs/reference/ fully deleted (prev scrapes had nav garbage
