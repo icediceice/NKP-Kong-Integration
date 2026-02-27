@@ -173,16 +173,22 @@ a chain of changes that compound into something broken, then not knowing where i
 ### Documentation Reference via NotebookLM
 
 A dedicated NotebookLM notebook has been set up for this project's external documentation.
-Use it instead of reading raw documentation files into context.
+Scraped documentation also lives in `docs/reference/` as clean markdown files.
 
 **Notebook ID:** `de3d8796-6cb6-4405-877c-b52c3002c51a`
 
-**Query docs via CLI (lowest token cost):**
+**Query docs via CLI (lowest token cost — preferred):**
 ```bash
 nlm ask "How do I configure X?" --notebook-id de3d8796-6cb6-4405-877c-b52c3002c51a
 ```
 This runs outside the context window — only the focused answer comes back. No context
 pollution from loading entire doc files.
+
+**Fallback — read from docs/reference/ directly:**
+If NotebookLM is unavailable or `nlm` is not installed, the scraped markdown files in
+`docs/reference/` can be read directly. Use targeted reads (specific sections) rather
+than loading entire files. This is more expensive than `nlm ask` but still better than
+reading raw HTML or re-scraping.
 
 **When to use NotebookLM:**
 - Framework/library API usage → `nlm ask`
@@ -194,17 +200,17 @@ pollution from loading entire doc files.
 - Config or env files → read directly (they're small)
 - Internal project logic or business rules → read the source
 
-**Adding new documentation sources:**
-If you encounter a new framework or API during development that isn't yet in the notebook,
-research its official documentation URL and add it:
+**Adding new documentation sources mid-project:**
+If you encounter a new framework or API not yet in the notebook:
 ```bash
-nlm source add de3d8796-6cb6-4405-877c-b52c3002c51a --url "https://docs.newframework.com/reference"
+# Scrape to markdown first
+crwl <doc-url> -o markdown > docs/reference/<technology-name>.md
+# Then add to NotebookLM
+nlm source add de3d8796-6cb6-4405-877c-b52c3002c51a --file docs/reference/<technology-name>.md
 ```
-If the source fails to add (login-gated portal, protected content), inform the developer
-with the exact URL and search terms so they can download and upload it manually to
-NotebookLM. Don't silently skip it.
-Only add authoritative sources — official docs, API references, vendor specs. Confirm with
-the developer if unsure whether a source is authoritative.
+If scraping fails (login-gated portal, protected content), inform the developer with the
+exact URL and search terms so they can download and add it manually.
+Only add authoritative sources — official docs, API references, vendor specs.
 
 ### Code Hygiene
 
