@@ -1,73 +1,10 @@
-[ ](https://developer.konghq.com/)
-SearchCommand or control keyK key
-Ask AI
-[ ](https://developer.konghq.com/)
-  * Platform
-Explore the platform
-[ Konnect  ](https://developer.konghq.com/konnect/)
-Build APIs
-[ Kong Insomnia  ](https://developer.konghq.com/insomnia/) [ API Design  ](https://developer.konghq.com/insomnia/design/) [ API Testing and Debugging  ](https://developer.konghq.com/insomnia/test/)
-Run APIs
-[ API Gateway  ](https://developer.konghq.com/gateway/) [ AI Gateway  ](https://developer.konghq.com/ai-gateway/) [ Event Gateway  ](https://developer.konghq.com/event-gateway/) [ Service Mesh  ](https://developer.konghq.com/mesh/) [ Kong Ingress Controller  ](https://developer.konghq.com/kubernetes-ingress-controller/) [ Kubernetes Operator  ](https://developer.konghq.com/operator/)
-Govern APIs
-[ Observability  ](https://developer.konghq.com/observability/) [ Metering & Billing  ](https://developer.konghq.com/metering-and-billing/) [ Scorecards  ](https://developer.konghq.com/catalog/scorecards/) [ API Security & Access Control  ](https://developer.konghq.com/gateway/security/)
-Discover APIs
-[ Developer Portal  ](https://developer.konghq.com/dev-portal/) [ Catalog  ](https://developer.konghq.com/catalog/)
-Tools
-    * [ decK ](https://developer.konghq.com/deck/)
-    * [ kongctl ](https://developer.konghq.com/kongctl/)
-    * [ Inso CLI ](https://developer.konghq.com/inso-cli/)
-    * [ Terraform ](https://developer.konghq.com/terraform/)
-    * [ Ingress controller ](https://developer.konghq.com/kubernetes-ingress-controller/)
-    * [ View all → ](https://developer.konghq.com/tools/)
-[ Why Kong? ](https://konghq.com/company/why-kong)
-Kong's SaaS API management platform designed to simplify managing and securing APIs. 
-[Learn more →](https://developer.konghq.com/konnect/)
-  * Guides
-    * [ API Gateway → ](https://developer.konghq.com/how-to/?products=gateway)
-    * [ AI Gateway → ](https://developer.konghq.com/how-to/?products=ai-gateway)
-    * [ Event Gateway → ](https://developer.konghq.com/how-to/?products=event-gateway)
-    * [ Insomnia → ](https://developer.konghq.com/how-to/?products=insomnia)
-    * [ Kong Ingress Controller → ](https://developer.konghq.com/how-to/?products=kic)
-    * [ Kubernetes Operator → ](https://developer.konghq.com/how-to/?products=operator)
-    * [ Kong Mesh → ](https://developer.konghq.com/how-to/?products=mesh)
-    * [ Dev Portal → ](https://developer.konghq.com/how-to/?products=dev-portal)
-    * [ Catalog → ](https://developer.konghq.com/how-to/?products=catalog)
-    * [View all →](https://developer.konghq.com/how-to/)
-  * Plugins
-    * [ AI ](https://developer.konghq.com/plugins/?category=ai)
-    * [ Authentication ](https://developer.konghq.com/plugins/?category=authentication)
-    * [ Security ](https://developer.konghq.com/plugins/?category=security)
-    * [ Traffic Control ](https://developer.konghq.com/plugins/?category=traffic-control)
-    * [ Serverless ](https://developer.konghq.com/plugins/?category=serverless)
-    * [ Analytics & Monitoring ](https://developer.konghq.com/plugins/?category=analytics-monitoring)
-    * [ Transformations ](https://developer.konghq.com/plugins/?category=transformations)
-    * [ Logging ](https://developer.konghq.com/plugins/?category=logging)
-    * [View all →](https://developer.konghq.com/plugins)
-  * [ APIs ](https://developer.konghq.com/api/)
-  * Support
-    * [ Community ](https://konghq.com/community)
-    * [ Github ](https://github.com/Kong/kong)
-    * [ Community Forum ](https://discuss.konghq.com/)
-    * [ Kong Pricing ](https://konghq.com/pricing)
-    * [ Demos ](https://konghq.com/resources/demos)
-    * [ User Calls ](https://konghq.com/events/user-calls)
-    * [ Workshops ](https://konghq.com/events/workshops)
-    * [ Help & Support ](https://support.konghq.com/s/)
-
-
-Theme
-[Get a Demo](https://konghq.com/contact-sales?utm_medium=referral&utm_source=docs&utm_content=top-nav) [Start Free Trial](https://konghq.com/products/kong-konnect/register?utm_medium=referral&utm_source=docs&utm_content=top-nav)
 [Home](https://developer.konghq.com/) / [Kong Ingress Controller](https://developer.konghq.com/kubernetes-ingress-controller/)
 [ Edit this Page Edit ](https://github.com/Kong/developer.konghq.com/edit/main/app/kubernetes-ingress-controller/reference/custom-resources.md) [ Report an Issue Report ](https://github.com/Kong/developer.konghq.com/issues/)
 # Custom Resource (CRD) API Reference
 Uses:  [Kong Ingress Controller](https://developer.konghq.com/kubernetes-ingress-controller/)
 Related Documentation
-[ ](https://developer.konghq.com/index/kubernetes-ingress-controller/)
 Tags
-[#crd](https://developer.konghq.com/search/?tags=crd)
 Related Resources
-[Gateway API](https://developer.konghq.com/kubernetes-ingress-controller/gateway-api/)
 ## [Packages ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#packages "Packages")
   * [configuration.konghq.com/v1](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configurationkonghqcomv1)
   * [configuration.konghq.com/v1alpha1](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configurationkonghqcomv1alpha1)
@@ -77,8 +14,6 @@ Related Resources
 ## [configuration.konghq.com/v1 ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configuration-konghq-com-v1 "configuration.konghq.com/v1")
 Package v1 contains API Schema definitions for the konghq.com v1 API group.
   * [KongClusterPlugin](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongclusterplugin)
-  * [KongConsumer](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumer)
-  * [KongIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingress)
   * [KongPlugin](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongplugin)
 ### [KongClusterPlugin ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongclusterplugin "KongClusterPlugin")
 
@@ -89,10 +24,10 @@ Field | Description
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1`  
 `kind` _string_ | `KongClusterPlugin`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
 `consumerRef` _string_ | ConsumerRef is a reference to a particular consumer.  
 `disabled` _boolean_ | Disabled set if the plugin is disabled or not.  
-`config` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#json-v1-apiextensions-k8s-io)_ | Config contains the plugin configuration. It’s a list of keys and values required to configure the plugin. Please read the documentation of the plugin being configured to set values in here. For any plugin in Kong, anything that goes in the `config` JSON key in the Admin API request, goes into this property. Only one of `config` or `configFrom` may be used in a KongClusterPlugin, not both at once.  
+`config` | Config contains the plugin configuration. It’s a list of keys and values required to configure the plugin. Please read the documentation of the plugin being configured to set values in here. For any plugin in Kong, anything that goes in the `config` JSON key in the Admin API request, goes into this property. Only one of `config` or `configFrom` may be used in a KongClusterPlugin, not both at once.  
 `configFrom` _[NamespacedConfigSource](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#namespacedconfigsource)_ | ConfigFrom references a secret containing the plugin configuration. This should be used when the plugin configuration contains sensitive information, such as AWS credentials in the Lambda plugin or the client secret in the OIDC plugin. Only one of `config` or `configFrom` may be used in a KongClusterPlugin, not both at once.  
 `configPatches` _[NamespacedConfigPatch](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#namespacedconfigpatch) array_ | ConfigPatches represents JSON patches to the configuration of the plugin. Each item means a JSON patch to add something in the configuration, where path is specified in `path` and value is in `valueFrom` referencing a key in a secret. When Config is specified, patches will be applied to the configuration in Config. Otherwise, patches will be applied to an empty object.  
 `plugin` _string_ | PluginName is the name of the plugin to which to apply the config.  
@@ -107,12 +42,12 @@ Field | Description
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1`  
 `kind` _string_ | `KongConsumer`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
 `username` _string_ | Username is a Kong cluster-unique username of the consumer.  
 `custom_id` _string_ | CustomID is a Kong cluster-unique existing ID for the consumer - useful for mapping Kong with users in your existing database.  
 `credentials` _string array_ | Credentials are references to secrets containing a credential to be provisioned in Kong.  
 `consumerGroups` _string array_ | ConsumerGroups are references to consumer groups (that consumer wants to be part of) provisioned in Kong.  
-`spec` _[KongConsumerSpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumerspec)_ |   
+`spec` _[KongConsumerSpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumerspec)_  
 ### [KongIngress ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingress "KongIngress")
 KongIngress is the Schema for the kongingresses API. Deprecated: Use annotations and KongUpstreamPolicy instead. See https://developer.konghq.com/kubernetes-ingress-controller/migrate/kongingress/
 It serves as an “extension” to Ingress resource. It is not meant as a replacement to the Ingress resource in Kubernetes. The Ingress resource spec in Kubernetes can define routing policies based on HTTP Host header and paths. While this is sufficient in most cases, sometimes, users may want more control over routing at the Ingress level. Once a `KongIngress` resource is created, it needs to be associated with an Ingress or Service resource using the `konghq.com/override` annotation.
@@ -123,7 +58,7 @@ Field | Description
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1`  
 `kind` _string_ | `KongIngress`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
 `upstream` _[KongIngressUpstream](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingressupstream)_ | Upstream represents a virtual hostname and can be used to loadbalance incoming requests over multiple targets (e.g. Kubernetes `Services` can be a target, OR `Endpoints` can be targets).  
 `proxy` _[KongIngressService](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingressservice)_ | Proxy defines additional connection options for the routes to be configured in the Kong Gateway, e.g. `connection_timeout`, `retries`, etc.  
 `route` _[KongIngressRoute](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingressroute)_ | Route define rules to match client requests. Each Route is associated with a Service, and a Service may have multiple Routes associated to it.  
@@ -134,27 +69,25 @@ Field | Description
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1`  
 `kind` _string_ | `KongPlugin`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
 `consumerRef` _string_ | ConsumerRef is a reference to a particular consumer.  
 `disabled` _boolean_ | Disabled set if the plugin is disabled or not.  
-`config` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#json-v1-apiextensions-k8s-io)_ | Config contains the plugin configuration. It’s a list of keys and values required to configure the plugin. Please read the documentation of the plugin being configured to set values in here. For any plugin in Kong, anything that goes in the `config` JSON key in the Admin API request, goes into this property. Only one of `config` or `configFrom` may be used in a KongPlugin, not both at once.  
-`configFrom` _[ConfigSource](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configsource)_ | ConfigFrom references a secret containing the plugin configuration. This should be used when the plugin configuration contains sensitive information, such as AWS credentials in the Lambda plugin or the client secret in the OIDC plugin. Only one of `config` or `configFrom` may be used in a KongPlugin, not both at once.  
+`config` | Config contains the plugin configuration. It’s a list of keys and values required to configure the plugin. Please read the documentation of the plugin being configured to set values in here. For any plugin in Kong, anything that goes in the `config` JSON key in the Admin API request, goes into this property. Only one of `config` or `configFrom` may be used in a KongPlugin, not both at once.  
+`configFrom` | ConfigFrom references a secret containing the plugin configuration. This should be used when the plugin configuration contains sensitive information, such as AWS credentials in the Lambda plugin or the client secret in the OIDC plugin. Only one of `config` or `configFrom` may be used in a KongPlugin, not both at once.  
 `configPatches` _[ConfigPatch](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configpatch) array_ | ConfigPatches represents JSON patches to the configuration of the plugin. Each item means a JSON patch to add something in the configuration, where path is specified in `path` and value is in `valueFrom` referencing a key in a secret. When Config is specified, patches will be applied to the configuration in Config. Otherwise, patches will be applied to an empty object.  
 `plugin` _string_ | PluginName is the name of the plugin to which to apply the config.  
 `run_on` _string_ | RunOn configures the plugin to run on the first or the second or both nodes in case of a service mesh deployment.  
 `protocols` _[KongProtocol](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongprotocol) array_ | Protocols configures plugin to run on requests received on specific protocols.  
 `ordering` _[PluginOrdering](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#pluginordering)_ | Ordering overrides the normal plugin execution order. It’s only available on Kong Enterprise. `<phase>` is a request processing phase (for example, `access` or `body_filter`) and `<plugin>` is the name of the plugin that will run before or after the KongPlugin. For example, a KongPlugin with `plugin: rate-limiting` and `before.access: ["key-auth"]` will create a rate limiting plugin that limits requests _before_ they are authenticated.  
 `instance_name` _string_ | InstanceName is an optional custom name to identify an instance of the plugin. This is useful when running the same plugin in multiple contexts, for example, on multiple services.  
-### [Types ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#types "Types")
 In this section you will find types that the CRDs rely on.
 #### [ConfigPatch ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configpatch "ConfigPatch")
 ConfigPatch is a JSON patch (RFC6902) to add values from Secret to the generated configuration. It is an equivalent of the following patch: `{"op": "add", "path": {.Path}, "value": {.ComputedValueFrom}}`.
 Field | Description  
 ---|---  
 `path` _string_ | Path is the JSON-Pointer value (RFC6901) that references a location within the target configuration.  
-`valueFrom` _[ConfigSource](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configsource)_ | ValueFrom is the reference to a key of a secret where the patched value comes from.  
+`valueFrom` | ValueFrom is the reference to a key of a secret where the patched value comes from.  
 _Appears in:_
-  * [KongPlugin](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongplugin)
 
 
 #### [ConfigSource ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configsource "ConfigSource")
@@ -163,8 +96,6 @@ Field | Description
 ---|---  
 `secretKeyRef` _[SecretValueFromSource](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#secretvaluefromsource)_ | Specifies a name and a key of a secret to refer to. The namespace is implicitly set to the one of referring object.  
 _Appears in:_
-  * [ConfigPatch](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configpatch)
-  * [KongPlugin](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongplugin)
 
 
 #### [KongConsumerSpec ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumerspec "KongConsumerSpec")
@@ -172,9 +103,8 @@ KongConsumerSpec defines the specification of the KongConsumer.
 Field | Description  
 ---|---  
 `controlPlaneRef` _[ControlPlaneRef](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#controlplaneref)_ | ControlPlaneRef is a reference to a ControlPlane this Consumer is associated with.  
-`tags` _[Tags](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#tags)_ | Tags is an optional set of tags applied to the consumer.  
+`tags` | Tags is an optional set of tags applied to the consumer.  
 _Appears in:_
-  * [KongConsumer](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumer)
 
 
 #### [KongIngressRoute ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingressroute "KongIngressRoute")
@@ -193,7 +123,6 @@ Field | Description
 `request_buffering` _boolean_ | RequestBuffering sets whether to enable request body buffering or not. Deprecated: use Ingress’ “konghq.com/request-buffering” annotation instead.  
 `response_buffering` _boolean_ | ResponseBuffering sets whether to enable response body buffering or not. Deprecated: use Ingress’ “konghq.com/response-buffering” annotation instead.  
 _Appears in:_
-  * [KongIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingress)
 
 
 #### [KongIngressService ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingressservice "KongIngressService")
@@ -207,7 +136,6 @@ Field | Description
 `read_timeout` _integer_ | The timeout in milliseconds between two successive read operations for transmitting a request to the upstream server. Deprecated: use Service’s “konghq.com/read-timeout” annotation instead.  
 `write_timeout` _integer_ | The timeout in milliseconds between two successive write operations for transmitting a request to the upstream server. Deprecated: use Service’s “konghq.com/write-timeout” annotation instead.  
 _Appears in:_
-  * [KongIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingress)
 
 
 #### [KongIngressUpstream ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingressupstream "KongIngressUpstream")
@@ -217,7 +145,7 @@ Field | Description
 `host_header` _string_ | HostHeader is The hostname to be used as Host header when proxying requests through Kong.  
 `algorithm` _string_ | Algorithm is the load balancing algorithm to use. Accepted values are: “round-robin”, “consistent-hashing”, “least-connections”, “latency”.  
 `slots` _integer_ | Slots is the number of slots in the load balancer algorithm.  
-`healthchecks` _[Healthcheck](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#healthcheck)_ | Healthchecks defines the health check configurations in Kong.  
+`healthchecks` | Healthchecks defines the health check configurations in Kong.  
 `hash_on` _string_ | HashOn defines what to use as hashing input. Accepted values are: “none”, “consumer”, “ip”, “header”, “cookie”, “path”, “query_arg”, “uri_capture”.  
 `hash_fallback` _string_ | HashFallback defines What to use as hashing input if the primary hash_on does not return a hash. Accepted values are: “none”, “consumer”, “ip”, “header”, “cookie”.  
 `hash_on_header` _string_ | HashOnHeader defines the header name to take the value from as hash input. Only required when “hash_on” is set to “header”.  
@@ -229,7 +157,6 @@ Field | Description
 `hash_on_uri_capture` _string_ | HashOnURICapture is the name of the capture group whose value is the hash input when “hash_on” is set to “uri_capture”.  
 `hash_fallback_uri_capture` _string_ | HashFallbackURICapture is the “hash_fallback” version of HashOnURICapture.  
 _Appears in:_
-  * [KongIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingress)
 
 
 #### [KongProtocol ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongprotocol "KongProtocol")
@@ -238,7 +165,6 @@ KongProtocol is a valid Kong protocol. This alias is necessary to deal with http
 _Appears in:_
   * [KongClusterPlugin](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongclusterplugin)
   * [KongIngressRoute](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingressroute)
-  * [KongPlugin](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongplugin)
 
 
 #### [NamespacedConfigPatch ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#namespacedconfigpatch "NamespacedConfigPatch")
@@ -279,14 +205,12 @@ Field | Description
 `name` _string_ | The secret containing the key.  
 `key` _string_ | The key containing the value.  
 _Appears in:_
-  * [ConfigSource](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configsource)
 
 
 ## [configuration.konghq.com/v1alpha1 ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configuration-konghq-com-v1alpha1 "configuration.konghq.com/v1alpha1")
 Package v1alpha1 contains API Schema definitions for the configuration.konghq.com v1alpha1 API group.
   * [IngressClassParameters](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#ingressclassparameters)
   * [KongCustomEntity](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongcustomentity)
-  * [KongLicense](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#konglicense)
   * [KongVault](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongvault)
 ### [IngressClassParameters ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#ingressclassparameters "IngressClassParameters")
 
@@ -296,7 +220,7 @@ Field | Description
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1alpha1`  
 `kind` _string_ | `IngressClassParameters`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
 `spec` _[IngressClassParametersSpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#ingressclassparametersspec)_ | Spec is the IngressClassParameters specification.  
 ### [KongCustomEntity ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongcustomentity "KongCustomEntity")
 KongCustomEntity defines a “custom” Kong entity that KIC cannot support the entity type directly.
@@ -304,15 +228,15 @@ Field | Description
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1alpha1`  
 `kind` _string_ | `KongCustomEntity`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
-`spec` _[KongCustomEntitySpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongcustomentityspec)_ |   
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
+`spec` _[KongCustomEntitySpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongcustomentityspec)_  
 ### [KongLicense ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#konglicense "KongLicense")
 KongLicense stores a Kong enterprise license to apply to managed Kong gateway instances.
 Field | Description  
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1alpha1`  
 `kind` _string_ | `KongLicense`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
 `rawLicenseString` _string_ | RawLicenseString is a string with the raw content of the license.  
 `enabled` _boolean_ | Enabled is set to true to let controllers (like KIC or KGO) to reconcile it. Default value is true to apply the license by default.  
 ### [KongVault ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongvault "KongVault")
@@ -321,18 +245,17 @@ Field | Description
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1alpha1`  
 `kind` _string_ | `KongVault`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
-`spec` _[KongVaultSpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongvaultspec)_ |   
-### [Types ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#types "Types")
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
+`spec` _[KongVaultSpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongvaultspec)_  
 In this section you will find types that the CRDs rely on.
 #### [ControllerReference ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#controllerreference "ControllerReference")
 ControllerReference is a reference to a controller that reconciles the KongLicense.
 Field | Description  
 ---|---  
-`group` _[Group](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#group)_ | Group is the group of referent. It should be empty if the referent is in “core” group (like pod).  
-`kind` _[Kind](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kind)_ | Kind is the kind of the referent. By default the nil kind means kind Pod.  
-`namespace` _[Namespace](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#namespace)_ | Namespace is the namespace of the referent. It should be empty if the referent is cluster scoped.  
-`name` _[ObjectName](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#objectname)_ | Name is the name of the referent.  
+`group` | Group is the group of referent. It should be empty if the referent is in “core” group (like pod).  
+`kind` | Kind is the kind of the referent. By default the nil kind means kind Pod.  
+`namespace` | Namespace is the namespace of the referent. It should be empty if the referent is cluster scoped.  
+`name` | Name is the name of the referent.  
 _Appears in:_
   * [KongLicenseControllerStatus](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#konglicensecontrollerstatus)
 
@@ -352,7 +275,7 @@ KongCustomEntitySpec defines the specification of the KongCustomEntity.
 Field | Description  
 ---|---  
 `type` _string_ | EntityType is the type of the Kong entity. The type is used in generating declarative configuration.  
-`fields` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#json-v1-apiextensions-k8s-io)_ | Fields defines the fields of the Kong entity itself.  
+`fields` | Fields defines the fields of the Kong entity itself.  
 `controllerName` _string_ | ControllerName specifies the controller that should reconcile it, like ingress class.  
 `parentRef` _[ObjectReference](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#objectreference)_ | ParentRef references the kubernetes resource it attached to when its scope is “attached”. Currently only KongPlugin/KongClusterPlugin allowed. This will make the custom entity to be attached to the entity(service/route/consumer) where the plugin is attached.  
 _Appears in:_
@@ -366,11 +289,10 @@ Field | Description
 `backend` _string_ | Backend is the type of the backend storing the secrets in the vault. The supported backends of Kong is listed here: https://docs.konghq.com/gateway/latest/kong-enterprise/secrets-management/backends/  
 `prefix` _string_ | Prefix is the prefix of vault URI for referencing values in the vault. It is immutable after created.  
 `description` _string_ | Description is the additional information about the vault.  
-`config` _[JSON](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#json-v1-apiextensions-k8s-io)_ | Config is the configuration of the vault. Varies for different backends.  
-`tags` _[Tags](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#tags)_ | Tags are the tags associated to the vault for grouping and filtering.  
+`config` | Config is the configuration of the vault. Varies for different backends.  
+`tags` | Tags are the tags associated to the vault for grouping and filtering.  
 `controlPlaneRef` _[ControlPlaneRef](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#controlplaneref)_ | ControlPlaneRef is a reference to a Konnect ControlPlane this KongVault is associated with.  
 _Appears in:_
-  * [KongVault](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongvault)
 
 
 #### [ObjectName ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#objectname "ObjectName")
@@ -396,7 +318,6 @@ _Appears in:_
 Package v1beta1 contains API Schema definitions for the configuration.konghq.com v1beta1 API group.
   * [KongConsumerGroup](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumergroup)
   * [KongUpstreamPolicy](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongupstreampolicy)
-  * [TCPIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#tcpingress)
   * [UDPIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#udpingress)
 ### [KongConsumerGroup ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumergroup "KongConsumerGroup")
 
@@ -407,26 +328,16 @@ Field | Description
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1beta1`  
 `kind` _string_ | `KongConsumerGroup`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
-`spec` _[KongConsumerGroupSpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumergroupspec)_ |   
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
+`spec` _[KongConsumerGroupSpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumergroupspec)_  
 ### [KongUpstreamPolicy ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongupstreampolicy "KongUpstreamPolicy")
-KongUpstreamPolicy allows configuring algorithm that should be used for load balancing traffic between Kong Upstream’s Targets. It also allows configuring health checks for Kong Upstream’s Targets.  
-  
-Its configuration is similar to Kong Upstream object (https://docs.konghq.com/gateway/latest/admin-api/#upstream-object), and it is applied to Kong Upstream objects created by the controller.  
-  
-It can be attached to Services. To attach it to a Service, it has to be annotated with `konghq.com/upstream-policy: <name>`, where `<name>` is the name of the KongUpstreamPolicy object in the same namespace as the Service.  
-  
-When attached to a Service, it will affect all Kong Upstreams created for the Service.  
-  
-When attached to a Service used in a Gateway API _Route rule with multiple BackendRefs, all of its Services MUST be configured with the same KongUpstreamPolicy. Otherwise, the controller will *ignore_ the KongUpstreamPolicy.  
-  
-Note: KongUpstreamPolicy doesn’t implement Gateway API’s GEP-713 strictly. In particular, it doesn’t use the TargetRef for attaching to Services and Gateway API *Routes - annotations are used instead. This is to allow reusing the same KongUpstreamPolicy for multiple Services and Gateway API *Routes.
+KongUpstreamPolicy allows configuring algorithm that should be used for load balancing traffic between Kong Upstream’s Targets. It also allows configuring health checks for Kong Upstream’s Targets. Its configuration is similar to Kong Upstream object (https://docs.konghq.com/gateway/latest/admin-api/#upstream-object), and it is applied to Kong Upstream objects created by the controller. It can be attached to Services. To attach it to a Service, it has to be annotated with `konghq.com/upstream-policy: <name>`, where `<name>` is the name of the KongUpstreamPolicy object in the same namespace as the Service. When attached to a Service, it will affect all Kong Upstreams created for the Service. When attached to a Service used in a Gateway API _Route rule with multiple BackendRefs, all of its Services MUST be configured with the same KongUpstreamPolicy. Otherwise, the controller will *ignore_ the KongUpstreamPolicy. Note: KongUpstreamPolicy doesn’t implement Gateway API’s GEP-713 strictly. In particular, it doesn’t use the TargetRef for attaching to Services and Gateway API *Routes - annotations are used instead. This is to allow reusing the same KongUpstreamPolicy for multiple Services and Gateway API *Routes.
 See [customizing load balancing](https://developer.konghq.com/kubernetes-ingress-controller/load-balancing/).
 Field | Description  
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1beta1`  
 `kind` _string_ | `KongUpstreamPolicy`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
 `spec` _[KongUpstreamPolicySpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongupstreampolicyspec)_ | Spec contains the configuration of the Kong upstream.  
 ### [TCPIngress ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#tcpingress "TCPIngress")
 TCPIngress is the Schema for the tcpingresses API. Deprecated: Use Gateway API instead. See https://developer.konghq.com/kubernetes-ingress-controller/migrate/ingress-to-gateway/
@@ -435,7 +346,7 @@ Field | Description
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1beta1`  
 `kind` _string_ | `TCPIngress`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
 `spec` _[TCPIngressSpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#tcpingressspec)_ | Spec is the TCPIngress specification.  
 ### [UDPIngress ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#udpingress "UDPIngress")
 UDPIngress is the Schema for the udpingresses API. Deprecated: Use Gateway API instead. See https://developer.konghq.com/kubernetes-ingress-controller/migrate/ingress-to-gateway/
@@ -444,9 +355,8 @@ Field | Description
 ---|---  
 `apiVersion` _string_ | `configuration.konghq.com/v1beta1`  
 `kind` _string_ | `UDPIngress`  
-`metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`.  
+`metadata` | Refer to Kubernetes API documentation for fields of `metadata`.  
 `spec` _[UDPIngressSpec](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#udpingressspec)_ | Spec is the UDPIngress specification.  
-### [Types ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#types "Types")
 In this section you will find types that the CRDs rely on.
 #### [HTTPStatus ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#httpstatus "HTTPStatus")
 _Underlying type:_ `integer`
@@ -456,7 +366,6 @@ _Appears in:_
   * [KongUpstreamHealthcheckUnhealthy](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongupstreamhealthcheckunhealthy)
 
 
-#### [HashInput ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#hashinput "HashInput")
 _Underlying type:_ `string`
 HashInput is the input for consistent-hashing load balancing algorithm. It is required use “none” to disable hashing when “algorithm” is set to sticky sessions.
 _Appears in:_
@@ -470,7 +379,6 @@ Field | Description
 `serviceName` _string_ | Specifies the name of the referenced service.  
 `servicePort` _integer_ | Specifies the port of the referenced service.  
 _Appears in:_
-  * [IngressRule](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#ingressrule)
   * [UDPIngressRule](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#udpingressrule)
 
 
@@ -501,7 +409,7 @@ Field | Description
 ---|---  
 `name` _string_ | Name is the name of the ConsumerGroup in Kong.  
 `controlPlaneRef` _[ControlPlaneRef](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#controlplaneref)_ | ControlPlaneRef is a reference to a ControlPlane this ConsumerGroup is associated with.  
-`tags` _[Tags](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#tags)_ | Tags is an optional set of tags applied to the ConsumerGroup.  
+`tags` | Tags is an optional set of tags applied to the ConsumerGroup.  
 _Appears in:_
   * [KongConsumerGroup](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumergroup)
 
@@ -527,7 +435,7 @@ _Appears in:_
 KongUpstreamHash defines how to calculate hash for consistent-hashing load balancing algorithm. Only one of the fields must be set.
 Field | Description  
 ---|---  
-`input` _[HashInput](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#hashinput)_ | Input allows using one of the predefined inputs (ip, consumer, path, none). Set this to `none` if you want to use sticky sessions. For other parameterized inputs, use one of the fields below.  
+`input` | Input allows using one of the predefined inputs (ip, consumer, path, none). Set this to `none` if you want to use sticky sessions. For other parameterized inputs, use one of the fields below.  
 `header` _string_ | Header is the name of the header to use as hash input.  
 `cookie` _string_ | Cookie is the name of the cookie to use as hash input.  
 `cookiePath` _string_ | CookiePath is cookie path to set in the response headers.  
@@ -616,7 +524,6 @@ Field | Description
 `rules` _[IngressRule](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#ingressrule) array_ | A list of rules used to configure the Ingress.  
 `tls` _[IngressTLS](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#ingresstls) array_ | TLS configuration. This is similar to the `tls` section in the Ingress resource in networking.v1beta1 group. The mapping of SNIs to TLS cert-key pair defined here will be used for HTTP Ingress rules as well. Once can define the mapping in this resource or the original Ingress resource, both have the same effect.  
 _Appears in:_
-  * [TCPIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#tcpingress)
 
 
 #### [UDPIngressRule ](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#udpingressrule "UDPIngressRule")
@@ -635,35 +542,6 @@ Field | Description
 ---|---  
 `rules` _[UDPIngressRule](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#udpingressrule) array_ | A list of rules used to configure the Ingress.  
 _Appears in:_
-  * [UDPIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#udpingress)
-
-
-Related Documentation
-[ ](https://developer.konghq.com/index/kubernetes-ingress-controller/)
-Tags
-[#crd](https://developer.konghq.com/search/?tags=crd)
-Related Resources
-[Gateway API](https://developer.konghq.com/kubernetes-ingress-controller/gateway-api/)
-  * [Custom Resource (CRD) API Reference](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#custom-resource-crd-api-reference)
-  * [Packages](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#packages)
-  * [configuration.konghq.com/v1](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configuration-konghq-com-v1)
-    * [KongClusterPlugin](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongclusterplugin)
-    * [KongConsumer](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumer)
-    * [KongIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongingress)
-    * [KongPlugin](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongplugin)
-    * [Types](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#types)
-  * [configuration.konghq.com/v1alpha1](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configuration-konghq-com-v1alpha1)
-    * [IngressClassParameters](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#ingressclassparameters)
-    * [KongCustomEntity](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongcustomentity)
-    * [KongLicense](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#konglicense)
-    * [KongVault](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongvault)
-    * [Types](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#types)
-  * [configuration.konghq.com/v1beta1](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#configuration-konghq-com-v1beta1)
-    * [KongConsumerGroup](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongconsumergroup)
-    * [KongUpstreamPolicy](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#kongupstreampolicy)
-    * [TCPIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#tcpingress)
-    * [UDPIngress](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#udpingress)
-    * [Types](https://developer.konghq.com/kubernetes-ingress-controller/reference/custom-resources/#types)
 
 
 ### Did this doc help?
@@ -672,24 +550,38 @@ Something wrong?
 [Report an Issue](https://github.com/Kong/developer.konghq.com/issues/) | [Edit this Page](https://github.com/Kong/developer.konghq.com/edit/main/app/kubernetes-ingress-controller/reference/custom-resources.md)
 ### Help us make these docs great!
 Kong Developer docs are open source. If you find these useful and want to make them better, contribute today!
-[Contribute](https://github.com/Kong/developer.konghq.com)
 ### Still need help
 [ Ask in our Forum ](https://discuss.konghq.com/) [ Contact Support ](https://support.konghq.com/support/s/)
-![Kong Logo](https://developer.konghq.com/assets/logos/brand/KongPrimary.svg) ![Kong Logo](https://developer.konghq.com/assets/logos/brand/Kong-Logotype.svg)
-##### Powering the API world
-Increase developer productivity, security, and performance at scale with the unified platform for API management, service mesh, and ingress controller.
-Ready to get started with Kong?
-[Start free trial](https://konghq.com/products/kong-konnect/register?utm_medium=referral&utm_source=docs&utm_content=footer) [Get a Demo](https://konghq.com/contact-sales?utm_medium=referral&utm_source=docs&utm_content=footer)
-Platform
-[API Platform](https://konghq.com/products/kong-konnect) [API Gateway](https://konghq.com/products/kong-gateway) [AI Gateway](https://konghq.com/products/kong-ai-gateway) [Service Mesh](https://konghq.com/products/kong-mesh) [API Builder](https://konghq.com/products/kong-insomnia) [Pricing](https://konghq.com/pricing)
-Platorm Docs
-[Kong Gateway](https://developer.konghq.com/gateway/) [Kong AI Gateway](https://developer.konghq.com/ai-gateway/) [Kong Mesh](https://developer.konghq.com/mesh/) [Insomnia](https://developer.konghq.com/insomnia/) [OpenAPI Specs](https://developer.konghq.com/api/) [Ingress Controller](https://developer.konghq.com/kubernetes-ingress-controller/)
-Plugins
-[AI Plugins](https://developer.konghq.com/plugins/?category=ai) [Analytics Plugins](https://developer.konghq.com/plugins/?category=analytics-monitoring) [Authentication Plugins](https://developer.konghq.com/plugins/?category=authentication) [Security Plugins](https://developer.konghq.com/plugins/?category=security) [Traffic Control Plugins](https://developer.konghq.com/plugins/?category=traffic-control) [View all →](https://developer.konghq.com/plugins/)
-How-to Guides
-[Kong Gateway](https://developer.konghq.com/how-to/?products=gateway) [Insomnia](https://developer.konghq.com/how-to/?products=insomnia) [Kong Mesh](https://developer.konghq.com/how-to/?products=mesh) [Terraform](https://developer.konghq.com/how-to/?tools=deck) [View all →](https://developer.konghq.com/how-to/)
-Support
-[Community](https://konghq.com/community) [Community Forum](https://discuss.konghq.com/) [GitHub](https://github.com/Kong/kong) [Demos](https://konghq.com/resources/demos) [User Calls](https://konghq.com/events/user-calls) [Workshops](https://konghq.com/events/workshops) [Help & Support](https://support.konghq.com/s/) [Contact Us](https://konghq.com/company/contact-us)
-[ ](https://github.com/kong/kong) [ ](https://www.meetup.com/topics/kong/all) [ ](https://www.linkedin.com/company/konghq) [ ](https://x.com/kong) [ ](https://www.youtube.com/@KongInc)
-[Terms](https://konghq.com/legal/terms-of-use) | [Privacy](https://konghq.com/legal/privacy-policy) | [Trust and Compliance](https://konghq.com/compliance)
-© Kong Inc. 2026 
+## Do Not Sell My Personal Information
+When you visit our website, we store cookies on your browser to collect information. The information collected might relate to you, your preferences or your device, and is mostly used to make the site work as you expect it to and to provide a more personalized web experience. However, you can choose not to allow certain types of cookies, which may impact your experience of the site and the services we are able to offer. Click on the different category headings to find out more and change our default settings according to your preference. You cannot opt-out of our First Party Strictly Necessary Cookies as they are deployed in order to ensure the proper functioning of our website (such as prompting the cookie banner and remembering your settings, to log into your account, to redirect you when you log out, etc.). For more information about the First and Third Party Cookies used please follow this link.
+Allow All
+###  Manage Consent Preferences
+#### Strictly Necessary Cookies
+Always Active
+These cookies are necessary for the website to function and cannot be switched off in our systems. They are usually only set in response to actions made by you which amount to a request for services, such as setting your privacy preferences, logging in or filling in forms. You can set your browser to block or alert you about these cookies, but some parts of the site will not then work. These cookies do not store any personally identifiable information.
+#### Sale of Personal Data
+Sale of Personal Data
+Under the California Consumer Privacy Act, you have the right to opt-out of the sale of your personal information to third parties. These cookies collect information for analytics and to personalize your experience with targeted ads. You may exercise your right to opt out of the sale of personal information by using this toggle switch. If you opt out we will not be able to offer you personalised ads and will not hand over your personal information to any third parties. Additionally, you may contact our legal department for further clarification about your rights as a California consumer by using this Exercise My Rights link.If you have enabled privacy controls on your browser (such as a plugin), we have to take that as a valid request to opt-out. Therefore we would not be able to track your activity through the web. This may affect our ability to personalize ads according to your preferences.
+  * ##### Performance Cookies
+Switch Label label
+These cookies allow us to count visits and traffic sources so we can measure and improve the performance of our site. They help us to know which pages are the most and least popular and see how visitors move around the site. All information these cookies collect is aggregated and therefore anonymous. If you do not allow these cookies we will not know when you have visited our site, and will not be able to monitor its performance.
+
+
+  * ##### Targeting Cookies
+Switch Label label
+These cookies may be set through our site by our advertising partners. They may be used by those companies to build a profile of your interests and show you relevant adverts on other sites. They do not store directly personal information, but are based on uniquely identifying your browser and internet device. If you do not allow these cookies, you will experience less targeted advertising.
+
+
+Back Button
+### Cookie List
+Search Icon
+Filter Icon
+Clear
+checkbox label label
+Apply Cancel
+Consent Leg.Interest
+checkbox label label
+checkbox label label
+checkbox label label
+Confirm My Choices
+

@@ -201,12 +201,13 @@ reading raw HTML or re-scraping.
 - Internal project logic or business rules → read the source
 
 **Adding new documentation sources mid-project:**
-If you encounter a new framework or API not yet in the notebook:
+If you encounter a new framework or API not yet in the notebook, first check what the
+project actually uses from it (imports, config, API calls), then scrape only relevant pages:
 ```bash
-# Scrape to markdown first
-crwl <doc-url> -o markdown > docs/reference/<technology-name>.md
+# Scrape specific pages with markdown-fit (strips nav/boilerplate per page)
+crwl crawl <page-url> -o markdown-fit 2>/dev/null >> docs/reference/<topic>.md
 # Then add to NotebookLM
-nlm source add de3d8796-6cb6-4405-877c-b52c3002c51a --file docs/reference/<technology-name>.md
+nlm source add de3d8796-6cb6-4405-877c-b52c3002c51a --file docs/reference/<topic>.md
 ```
 If scraping fails (login-gated portal, protected content), inform the developer with the
 exact URL and search terms so they can download and add it manually.

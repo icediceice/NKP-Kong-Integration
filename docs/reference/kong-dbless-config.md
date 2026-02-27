@@ -1,69 +1,8 @@
-[ ](https://developer.konghq.com/)
-SearchCommand or control keyK key
-Ask AI
-[ ](https://developer.konghq.com/)
-  * Platform
-Explore the platform
-[ Konnect  ](https://developer.konghq.com/konnect/)
-Build APIs
-[ Kong Insomnia  ](https://developer.konghq.com/insomnia/) [ API Design  ](https://developer.konghq.com/insomnia/design/) [ API Testing and Debugging  ](https://developer.konghq.com/insomnia/test/)
-Run APIs
-[ API Gateway  ](https://developer.konghq.com/gateway/) [ AI Gateway  ](https://developer.konghq.com/ai-gateway/) [ Event Gateway  ](https://developer.konghq.com/event-gateway/) [ Service Mesh  ](https://developer.konghq.com/mesh/) [ Kong Ingress Controller  ](https://developer.konghq.com/kubernetes-ingress-controller/) [ Kubernetes Operator  ](https://developer.konghq.com/operator/)
-Govern APIs
-[ Observability  ](https://developer.konghq.com/observability/) [ Metering & Billing  ](https://developer.konghq.com/metering-and-billing/) [ Scorecards  ](https://developer.konghq.com/catalog/scorecards/) [ API Security & Access Control  ](https://developer.konghq.com/gateway/security/)
-Discover APIs
-[ Developer Portal  ](https://developer.konghq.com/dev-portal/) [ Catalog  ](https://developer.konghq.com/catalog/)
-Tools
-    * [ decK ](https://developer.konghq.com/deck/)
-    * [ kongctl ](https://developer.konghq.com/kongctl/)
-    * [ Inso CLI ](https://developer.konghq.com/inso-cli/)
-    * [ Terraform ](https://developer.konghq.com/terraform/)
-    * [ Ingress controller ](https://developer.konghq.com/kubernetes-ingress-controller/)
-    * [ View all → ](https://developer.konghq.com/tools/)
-[ Why Kong? ](https://konghq.com/company/why-kong)
-Kong's SaaS API management platform designed to simplify managing and securing APIs. 
-[Learn more →](https://developer.konghq.com/konnect/)
-  * Guides
-    * [ API Gateway → ](https://developer.konghq.com/how-to/?products=gateway)
-    * [ AI Gateway → ](https://developer.konghq.com/how-to/?products=ai-gateway)
-    * [ Event Gateway → ](https://developer.konghq.com/how-to/?products=event-gateway)
-    * [ Insomnia → ](https://developer.konghq.com/how-to/?products=insomnia)
-    * [ Kong Ingress Controller → ](https://developer.konghq.com/how-to/?products=kic)
-    * [ Kubernetes Operator → ](https://developer.konghq.com/how-to/?products=operator)
-    * [ Kong Mesh → ](https://developer.konghq.com/how-to/?products=mesh)
-    * [ Dev Portal → ](https://developer.konghq.com/how-to/?products=dev-portal)
-    * [ Catalog → ](https://developer.konghq.com/how-to/?products=catalog)
-    * [View all →](https://developer.konghq.com/how-to/)
-  * Plugins
-    * [ AI ](https://developer.konghq.com/plugins/?category=ai)
-    * [ Authentication ](https://developer.konghq.com/plugins/?category=authentication)
-    * [ Security ](https://developer.konghq.com/plugins/?category=security)
-    * [ Traffic Control ](https://developer.konghq.com/plugins/?category=traffic-control)
-    * [ Serverless ](https://developer.konghq.com/plugins/?category=serverless)
-    * [ Analytics & Monitoring ](https://developer.konghq.com/plugins/?category=analytics-monitoring)
-    * [ Transformations ](https://developer.konghq.com/plugins/?category=transformations)
-    * [ Logging ](https://developer.konghq.com/plugins/?category=logging)
-    * [View all →](https://developer.konghq.com/plugins)
-  * [ APIs ](https://developer.konghq.com/api/)
-  * Support
-    * [ Community ](https://konghq.com/community)
-    * [ Github ](https://github.com/Kong/kong)
-    * [ Community Forum ](https://discuss.konghq.com/)
-    * [ Kong Pricing ](https://konghq.com/pricing)
-    * [ Demos ](https://konghq.com/resources/demos)
-    * [ User Calls ](https://konghq.com/events/user-calls)
-    * [ Workshops ](https://konghq.com/events/workshops)
-    * [ Help & Support ](https://support.konghq.com/s/)
-
-
-Theme
-[Get a Demo](https://konghq.com/contact-sales?utm_medium=referral&utm_source=docs&utm_content=top-nav) [Start Free Trial](https://konghq.com/products/kong-konnect/register?utm_medium=referral&utm_source=docs&utm_content=top-nav)
 [Home](https://developer.konghq.com/) / [Kong Gateway](https://developer.konghq.com/gateway/)
 [ Edit this Page Edit ](https://github.com/Kong/developer.konghq.com/edit/main/app/gateway/db-less-mode.md) [ Report an Issue Report ](https://github.com/Kong/developer.konghq.com/issues/)
 # DB-less mode
 Uses:  [Kong Gateway](https://developer.konghq.com/gateway/)
 Related Documentation
-[ ](https://developer.konghq.com/index/gateway/)
 Incompatible with
 konnect
 Tags
@@ -71,8 +10,6 @@ Tags
 Related Resources
 [Deployment topologies](https://developer.konghq.com/gateway/deployment-topologies/)
 [Data Plane hosting options](https://developer.konghq.com/gateway/topology-hosting-options/)
-[Hybrid mode](https://developer.konghq.com/gateway/hybrid-mode/)
-[Traditional mode](https://developer.konghq.com/gateway/traditional-mode/)
 [CLI reference: kong config](https://developer.konghq.com/gateway/cli/reference/#kong-config)
 [Kong Gateway entity references](https://developer.konghq.com/gateway/entities/)
 Kong Gateway can be run without a database using only in-memory storage for [entities](https://developer.konghq.com/gateway/entities/). We call this DB-less mode. When running Kong Gateway DB-less, the configuration of entities is done in a second configuration file, in YAML or JSON, using declarative configuration.
@@ -87,9 +24,9 @@ The combination of DB-less mode and declarative configuration has a number of be
  
 flowchart TD
 
-A(![](https://developer.konghq.com/assets/icons/gateway.svg) Kong Gateway instance)
-B(![](https://developer.konghq.com/assets/icons/gateway.svg) Kong Gateway instance)
-C(![](https://developer.konghq.com/assets/icons/gateway.svg) Kong Gateway instance)
+A( Kong Gateway instance)
+B( Kong Gateway instance)
+C( Kong Gateway instance)
 
 A2(fa:fa-file kong1.yml)
 B2(fa:fa-file kong1.yml)
@@ -166,63 +103,14 @@ This restriction is limited to what would otherwise be database operations. In p
 ### [Plugin compatibility ](https://developer.konghq.com/gateway/db-less-mode/#plugin-compatibility "Plugin compatibility")
 Not all Kong Gateway plugins are compatible with DB-less mode. By design, some plugins require central database coordination or dynamic creation of entities.
 For current plugin compatibility, see [Plugins](https://developer.konghq.com/gateway/entities/plugin/).
-Related Documentation
-[ ](https://developer.konghq.com/index/gateway/)
-Incompatible with
-konnect
-Tags
-[#deployment-topologies](https://developer.konghq.com/search/?tags=deployment-topologies)
-Related Resources
-[Deployment topologies](https://developer.konghq.com/gateway/deployment-topologies/)
-[Data Plane hosting options](https://developer.konghq.com/gateway/topology-hosting-options/)
-[Hybrid mode](https://developer.konghq.com/gateway/hybrid-mode/)
-[Traditional mode](https://developer.konghq.com/gateway/traditional-mode/)
-[CLI reference: kong config](https://developer.konghq.com/gateway/cli/reference/#kong-config)
-[Kong Gateway entity references](https://developer.konghq.com/gateway/entities/)
-  * [DB-less mode](https://developer.konghq.com/gateway/db-less-mode/#db-less-mode)
-  * [How declarative configuration works in DB-less mode](https://developer.konghq.com/gateway/db-less-mode/#how-declarative-configuration-works-in-db-less-mode)
-  * [Set up Kong Gateway in DB-less mode](https://developer.konghq.com/gateway/db-less-mode/#set-up-kong-gateway-in-db-less-mode)
-  * [Generate a declarative configuration file](https://developer.konghq.com/gateway/db-less-mode/#generate-a-declarative-configuration-file)
-  * [Load the declarative configuration file](https://developer.konghq.com/gateway/db-less-mode/#load-the-declarative-configuration-file)
-  * [DB-less mode with Kubernetes](https://developer.konghq.com/gateway/db-less-mode/#db-less-mode-with-kubernetes)
-    * [DB-less mode with Kong Ingress Controller](https://developer.konghq.com/gateway/db-less-mode/#db-less-mode-with-kong-ingress-controller)
-    * [DB-less with Helm (Kong Ingress Controller disabled)](https://developer.konghq.com/gateway/db-less-mode/#db-less-with-helm-kong-ingress-controller-disabled)
-  * [DB-less mode limitations](https://developer.konghq.com/gateway/db-less-mode/#db-less-mode-limitations)
-    * [Memory cache requirements](https://developer.konghq.com/gateway/db-less-mode/#memory-cache-requirements)
-    * [No central database coordination](https://developer.konghq.com/gateway/db-less-mode/#no-central-database-coordination)
-    * [Read-only Admin API](https://developer.konghq.com/gateway/db-less-mode/#read-only-admin-api)
-    * [Kong Manager compatibility](https://developer.konghq.com/gateway/db-less-mode/#kong-manager-compatibility)
-    * [Plugin compatibility](https://developer.konghq.com/gateway/db-less-mode/#plugin-compatibility)
-
-
 ### Did this doc help?
 YesNo
 Something wrong?
 [Report an Issue](https://github.com/Kong/developer.konghq.com/issues/) | [Edit this Page](https://github.com/Kong/developer.konghq.com/edit/main/app/gateway/db-less-mode.md)
 ### Help us make these docs great!
 Kong Developer docs are open source. If you find these useful and want to make them better, contribute today!
-[Contribute](https://github.com/Kong/developer.konghq.com)
 ### Still need help
 [ Ask in our Forum ](https://discuss.konghq.com/) [ Contact Support ](https://support.konghq.com/support/s/)
-![Kong Logo](https://developer.konghq.com/assets/logos/brand/KongPrimary.svg) ![Kong Logo](https://developer.konghq.com/assets/logos/brand/Kong-Logotype.svg)
-##### Powering the API world
-Increase developer productivity, security, and performance at scale with the unified platform for API management, service mesh, and ingress controller.
-Ready to get started with Kong?
-[Start free trial](https://konghq.com/products/kong-konnect/register?utm_medium=referral&utm_source=docs&utm_content=footer) [Get a Demo](https://konghq.com/contact-sales?utm_medium=referral&utm_source=docs&utm_content=footer)
-Platform
-[API Platform](https://konghq.com/products/kong-konnect) [API Gateway](https://konghq.com/products/kong-gateway) [AI Gateway](https://konghq.com/products/kong-ai-gateway) [Service Mesh](https://konghq.com/products/kong-mesh) [API Builder](https://konghq.com/products/kong-insomnia) [Pricing](https://konghq.com/pricing)
-Platorm Docs
-[Kong Gateway](https://developer.konghq.com/gateway/) [Kong AI Gateway](https://developer.konghq.com/ai-gateway/) [Kong Mesh](https://developer.konghq.com/mesh/) [Insomnia](https://developer.konghq.com/insomnia/) [OpenAPI Specs](https://developer.konghq.com/api/) [Ingress Controller](https://developer.konghq.com/kubernetes-ingress-controller/)
-Plugins
-[AI Plugins](https://developer.konghq.com/plugins/?category=ai) [Analytics Plugins](https://developer.konghq.com/plugins/?category=analytics-monitoring) [Authentication Plugins](https://developer.konghq.com/plugins/?category=authentication) [Security Plugins](https://developer.konghq.com/plugins/?category=security) [Traffic Control Plugins](https://developer.konghq.com/plugins/?category=traffic-control) [View all →](https://developer.konghq.com/plugins/)
-How-to Guides
-[Kong Gateway](https://developer.konghq.com/how-to/?products=gateway) [Insomnia](https://developer.konghq.com/how-to/?products=insomnia) [Kong Mesh](https://developer.konghq.com/how-to/?products=mesh) [Terraform](https://developer.konghq.com/how-to/?tools=deck) [View all →](https://developer.konghq.com/how-to/)
-Support
-[Community](https://konghq.com/community) [Community Forum](https://discuss.konghq.com/) [GitHub](https://github.com/Kong/kong) [Demos](https://konghq.com/resources/demos) [User Calls](https://konghq.com/events/user-calls) [Workshops](https://konghq.com/events/workshops) [Help & Support](https://support.konghq.com/s/) [Contact Us](https://konghq.com/company/contact-us)
-[ ](https://github.com/kong/kong) [ ](https://www.meetup.com/topics/kong/all) [ ](https://www.linkedin.com/company/konghq) [ ](https://x.com/kong) [ ](https://www.youtube.com/@KongInc)
-[Terms](https://konghq.com/legal/terms-of-use) | [Privacy](https://konghq.com/legal/privacy-policy) | [Trust and Compliance](https://konghq.com/compliance)
-© Kong Inc. 2026 
-![Kong Logo](https://cdn.cookielaw.org/logos/42b8010a-a819-451e-8bd4-35f56794de29/2c4de954-6bec-4e93-8086-64cb113f151a/69e1ef61-0885-4db9-ac57-70d056bc66b3/konglogo.png)
 ## Do Not Sell My Personal Information
 When you visit our website, we store cookies on your browser to collect information. The information collected might relate to you, your preferences or your device, and is mostly used to make the site work as you expect it to and to provide a more personalized web experience. However, you can choose not to allow certain types of cookies, which may impact your experience of the site and the services we are able to offer. Click on the different category headings to find out more and change our default settings according to your preference. You cannot opt-out of our First Party Strictly Necessary Cookies as they are deployed in order to ensure the proper functioning of our website (such as prompting the cookie banner and remembering your settings, to log into your account, to redirect you when you log out, etc.). For more information about the First and Third Party Cookies used please follow this link.
 Allow All
@@ -232,9 +120,7 @@ Always Active
 These cookies are necessary for the website to function and cannot be switched off in our systems. They are usually only set in response to actions made by you which amount to a request for services, such as setting your privacy preferences, logging in or filling in forms. You can set your browser to block or alert you about these cookies, but some parts of the site will not then work. These cookies do not store any personally identifiable information.
 #### Sale of Personal Data
 Sale of Personal Data
-Under the California Consumer Privacy Act, you have the right to opt-out of the sale of your personal information to third parties. These cookies collect information for analytics and to personalize your experience with targeted ads. You may exercise your right to opt out of the sale of personal information by using this toggle switch. If you opt out we will not be able to offer you personalised ads and will not hand over your personal information to any third parties. Additionally, you may contact our legal department for further clarification about your rights as a California consumer by using this Exercise My Rights link.  
-  
-If you have enabled privacy controls on your browser (such as a plugin), we have to take that as a valid request to opt-out. Therefore we would not be able to track your activity through the web. This may affect our ability to personalize ads according to your preferences.
+Under the California Consumer Privacy Act, you have the right to opt-out of the sale of your personal information to third parties. These cookies collect information for analytics and to personalize your experience with targeted ads. You may exercise your right to opt out of the sale of personal information by using this toggle switch. If you opt out we will not be able to offer you personalised ads and will not hand over your personal information to any third parties. Additionally, you may contact our legal department for further clarification about your rights as a California consumer by using this Exercise My Rights link.If you have enabled privacy controls on your browser (such as a plugin), we have to take that as a valid request to opt-out. Therefore we would not be able to track your activity through the web. This may affect our ability to personalize ads according to your preferences.
   * ##### Performance Cookies
 Switch Label label
 These cookies allow us to count visits and traffic sources so we can measure and improve the performance of our site. They help us to know which pages are the most and least popular and see how visitors move around the site. All information these cookies collect is aggregated and therefore anonymous. If you do not allow these cookies we will not know when you have visited our site, and will not be able to monitor its performance.
@@ -257,4 +143,4 @@ checkbox label label
 checkbox label label
 checkbox label label
 Confirm My Choices
-[![Powered by Onetrust](https://cdn.cookielaw.org/logos/static/powered_by_logo.svg)](https://www.onetrust.com/products/cookie-consent/)
+

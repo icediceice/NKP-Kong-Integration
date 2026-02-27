@@ -1,7 +1,7 @@
 # Project: NKP-Kong-Integration (Kongka Stack)
 
 > Initialized: 2026-02-27 00:00
-> Last updated: 2026-02-28 10:00
+> Last updated: 2026-02-28 11:30
 
 ## Current Focus
 
@@ -20,6 +20,13 @@ Upcoming work in priority order:
 ## Work Log
 
 ### 2026-02-28
+
+#### 11:30 — Discipline re-audit (project-init)
+- **What:** Re-ran project-init. Found docs/reference/ fully deleted (prev scrapes had nav garbage
+  from old `crwl` without `crawl` subcommand). Re-scraped all 8 docs with `crwl crawl -o markdown-fit`.
+  Uploaded all 8 to NotebookLM (notebook was empty). Fixed CLAUDE.md crwl syntax.
+- **Files:** `docs/reference/*.md` (8 files re-scraped), `CLAUDE.md` (crwl syntax fix), `PROGRESS.md`
+- **Next:** Protocol/integration wiring (Kafka ↔ Kong)
 
 #### 10:00 — Discipline re-audit (project-init)
 - **What:** Re-ran project-init skill. All 9 CLAUDE.md sections intact. All tooling present
