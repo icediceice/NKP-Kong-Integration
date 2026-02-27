@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets / Environment
+.env
+.env.*
+*.pem
+*.key
+config.env
+
+# Project runtime artifacts
+.kafka-cluster-id
+
+# Logs
+*.log
