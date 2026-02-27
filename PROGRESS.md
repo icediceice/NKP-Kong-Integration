@@ -12,7 +12,7 @@ and config are in place. Awaiting direction for next phase of work.
 
 Upcoming work in priority order:
 
-- [ ] Install crawl4ai (`pip install -U crawl4ai && crawl4ai-setup`) and re-run project-init to scrape docs into `docs/reference/`
+- [x] Install crawl4ai and scrape docs into `docs/reference/` — 8 files scraped + uploaded to NotebookLM
 - [ ] Protocol/integration wiring (Kafka ↔ Kong routes, topics, consumers)
 - [ ] TLS configuration for production readiness
 - [ ] CI/CD pipeline setup
@@ -20,6 +20,15 @@ Upcoming work in priority order:
 ## Work Log
 
 ### 2026-02-28
+
+#### 01:00 — Doc library scraped and uploaded
+- **What:** Scraped 8 official doc sources into `docs/reference/` using crawl4ai. Uploaded
+  all 8 as file sources to NotebookLM (notebook: de3d8796). crwl PATH fixed via ~/.zshrc.
+  Nutanix NKP docs not scraped (login-gated portal — manual download needed if required).
+- **Files:** `docs/reference/kong-kic-get-started.md`, `kong-kic-custom-resources.md`,
+  `kong-dbless-config.md`, `confluent-kafka-kraft.md`, `confluent-cp-helm-charts-readme.md`,
+  `confluent-schema-registry.md`, `confluent-control-center.md`, `helm-upgrade-reference.md`
+- **Next:** Protocol/integration wiring (Kafka ↔ Kong)
 
 #### 00:00 — Discipline re-audit
 - **What:** Re-ran project-init skill. All 9 CLAUDE.md sections intact. Updated Documentation
