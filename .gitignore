@@ -20,3 +20,6 @@ config.env
 
 # Logs
 *.log
+
+# Local utility scripts (system/personal, not part of deployment kit)
+tools/

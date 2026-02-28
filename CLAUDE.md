@@ -131,7 +131,7 @@ The goal is to minimize back-and-forth. The user trusts you to make good calls �
 **Do NOT read files blindly.** Loading files into context has a real cost — it displaces
 useful information and degrades your ability to stay focused on the task.
 
-- If a `smart-indexer` skill or `.index` file is available, use it FIRST to understand
+- If a `smart-index` skill or `.index` file is available, use it FIRST to understand
   codebase structure before opening any source files. It gives you a compressed map of the
   project at a fraction of the context cost.
 - Only read files you actually need for the current task. If you need to understand an
@@ -196,7 +196,7 @@ reading raw HTML or re-scraping.
 - "How do I..." or "What's the correct way to..." for external tools → `nlm ask`
 
 **When NOT to use NotebookLM:**
-- Project's own source code → use smart-indexer + targeted file reads
+- Project's own source code → use smart-index + targeted file reads
 - Config or env files → read directly (they're small)
 - Internal project logic or business rules → read the source
 
@@ -245,7 +245,7 @@ The goal is to find things that matter, not generate a comprehensive report on e
 - Ask (or determine from context) what the audit focus is: bugs? security? performance?
   code quality? If unclear, prioritize in this order: bugs/errors → security → logic issues
   → performance → code style.
-- Use smart-indexer / `.index` to understand the project structure FIRST. Identify the
+- Use smart-index / `.index` to understand the project structure FIRST. Identify the
   critical paths and high-risk areas before opening any source files.
 - Focus on files that have **recently changed** (check git log/diff) — these are where new
   bugs live. Stable, untouched code is lower priority.

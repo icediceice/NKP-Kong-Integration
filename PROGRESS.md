@@ -1,7 +1,7 @@
 # Project: NKP-Kong-Integration (Kongka Stack)
 
 > Initialized: 2026-02-27 00:00
-> Last updated: 2026-02-28 12:00
+> Last updated: 2026-02-28 13:00
 
 ## Current Focus
 
@@ -20,6 +20,15 @@ Upcoming work in priority order:
 ## Work Log
 
 ### 2026-02-28
+
+#### 13:00 — Discipline re-audit (project-init)
+- **What:** Re-ran project-init. Found 2 NKP docs (nutanix-nkp-install.md,
+  nutanix-nkp-infra-config.md) present in docs/reference/ but missing from NotebookLM
+  (notebook had 8 sources, not 10). Uploaded both — notebook now at 10 sources.
+  Added tools/ to .gitignore (WSL PowerShell scripts, not part of deployment kit).
+  CLAUDE.md had minor pending changes (smart-indexer → smart-index fixes).
+- **Files:** `.gitignore`, `PROGRESS.md`, `CLAUDE.md`
+- **Next:** Protocol/integration wiring (Kafka ↔ Kong)
 
 #### 12:00 — NKP docs added from GitHub mirror
 - **What:** Fetched NKP 2.17 docs from icediceice/Nutanix-MD-Doc (portal is JS/auth-gated).
