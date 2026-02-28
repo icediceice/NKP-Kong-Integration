@@ -1,12 +1,14 @@
 # Project: NKP-Kong-Integration (Kongka Stack)
 
 > Initialized: 2026-02-27 00:00
-> Last updated: 2026-02-28 13:00
+> Last updated: 2026-03-01
 
 ## Current Focus
 
-Workflow discipline applied. Project scaffolding is complete — all scripts, Helm values,
-and config are in place. Awaiting direction for next phase of work.
+**⚠️ Customer deployment Monday 2026-03-03 — prep session Sunday 2026-03-02**
+
+Scaffolding is complete. Next session: work through the task queue top-to-bottom to get
+the stack deployment-ready. Protocol/integration wiring is the critical path item.
 
 ## Task Queue
 
@@ -18,6 +20,13 @@ Upcoming work in priority order:
 - [ ] CI/CD pipeline setup
 
 ## Work Log
+
+### 2026-03-01
+
+#### Session end — pre-deployment prep
+- **What:** Discipline audit only (project-init). Repo is clean, docs complete, notebook
+  at 10 sources. No code changes — saving real work for Sunday prep session.
+- **Next:** Sunday session — tackle task queue for Monday customer deployment
 
 ### 2026-02-28
 
