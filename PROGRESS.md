@@ -7,17 +7,21 @@
 
 **⚠️ Customer deployment Monday 2026-03-03 — prep session Sunday 2026-03-02**
 
-Scaffolding is complete. Next session: work through the task queue top-to-bottom to get
-the stack deployment-ready. Protocol/integration wiring is the critical path item.
+Scope confirmed: deploy platform, expose Kong proxy as LoadBalancer endpoint, hand off
+to customer. No integration wiring needed — customer will explore the platform themselves.
 
 ## Task Queue
 
 Upcoming work in priority order:
 
 - [x] Install crawl4ai and scrape docs into `docs/reference/` — 8 files scraped + uploaded to NotebookLM
-- [ ] Protocol/integration wiring (Kafka ↔ Kong routes, topics, consumers)
-- [ ] TLS configuration for production readiness
-- [ ] CI/CD pipeline setup
+- [ ] End-to-end deployment dry-run — verify full stack comes up cleanly on NKP
+- [ ] Confirm Kong proxy is exposed as LoadBalancer and LB IP is reachable
+
+**Out of scope (customer does their own integration):**
+- ~~Protocol/integration wiring (Kafka ↔ Kong routes, topics, consumers)~~
+- ~~TLS configuration~~
+- ~~CI/CD pipeline~~
 
 ## Work Log
 
