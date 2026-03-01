@@ -5,7 +5,7 @@
 
 ## Current Focus
 
-**Full stack live on workload01 — Kafka + Kong + Jaeger all running.**
+**Full stack validated end-to-end on workload01. Tear down + fresh install: zero errors.**
 
 ## Task Queue
 
@@ -30,6 +30,20 @@ Upcoming work in priority order:
 - ~~CI/CD pipeline~~
 
 ## Work Log
+
+### 2026-03-01 — Full end-to-end teardown + reinstall on workload01
+
+- **What:** Tore down the full stack (Kafka PVCs deleted, cluster ID cleared, all namespaces
+  removed) then ran `KUBECONFIG=auth/workload01.conf ./install.sh` cold.
+- **Result:** Zero errors, zero warnings. All verify.sh checks passed.
+  - New KRaft cluster ID: `9jYA6n8JRh-2iVUuoo023g`
+  - Control Center: `http://10.55.84.59:9021`
+  - Kong proxy:     `http://10.55.84.60`
+  - Jaeger UI:      `http://10.55.84.61:16686`
+  - OTLP gRPC:      `10.55.84.61:4317`
+  - OTLP HTTP:      `http://10.55.84.61:4318`
+- **Files:** No code changes — installer ran without modification
+- **Next:** Stack complete and validated. Ready for customer hand-off.
 
 ### 2026-03-01 — Jaeger live deploy on workload01
 
