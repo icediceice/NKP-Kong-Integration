@@ -1,48 +1,13 @@
 # =============================================================================
-# Confluent Control Center Helm Values — confluentinc/cp-enterprise-control-center
+# Confluent Control Center Helm Values — cp-control-center sub-chart
+# Part of confluentinc/cp-helm-charts umbrella chart.
 #
-# Control Center is the Confluent management UI for Kafka.
-# Kafka bootstrap, persistence size, and service type are overridden
-# at install time via --set in install-kafka.sh.
-#
-# Note: Control Center requires a Confluent Platform license.
-# Without a license it runs in a 30-day evaluation/trial mode.
+# Note: requires a Confluent Platform license; runs in 30-day trial without one.
 # =============================================================================
 
-cp-enterprise-control-center:
-  # ---------------------------------------------------------------------------
-  # Replica count — 1 is sufficient for POC
-  # ---------------------------------------------------------------------------
+cp-control-center:
   replicaCount: 1
 
-  # ---------------------------------------------------------------------------
-  # Web UI port
-  # ---------------------------------------------------------------------------
-  port: 9021
-
-  # ---------------------------------------------------------------------------
-  # Persistence (state store for topic/consumer metadata)
-  # storageClass and size overridden at install time
-  # ---------------------------------------------------------------------------
-  persistence:
-    enabled: true
-
-  # ---------------------------------------------------------------------------
-  # Probes — Control Center is slow to start; give it extra time
-  # ---------------------------------------------------------------------------
-  readinessProbe:
-    initialDelaySeconds: 120
-    periodSeconds: 20
-    failureThreshold: 6
-
-  livenessProbe:
-    initialDelaySeconds: 180
-    periodSeconds: 30
-    failureThreshold: 4
-
-  # ---------------------------------------------------------------------------
-  # Resources — Control Center is memory-heavy
-  # ---------------------------------------------------------------------------
   resources:
     requests:
       cpu: "500m"
@@ -51,11 +16,7 @@ cp-enterprise-control-center:
       cpu: "2"
       memory: "4Gi"
 
-  # ---------------------------------------------------------------------------
-  # Connect clusters to monitor (leave empty — team wires post-deploy)
-  # ---------------------------------------------------------------------------
-  controlcenter:
-    connect:
-      cluster: ""
-    ksql:
-      url: ""
+  # JMX exporter disabled — avoids dependency on pinned image SHA that may be unavailable
+  prometheus:
+    jmx:
+      enabled: false

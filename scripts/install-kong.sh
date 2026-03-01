@@ -64,6 +64,25 @@ case "${KONG_DB_MODE:-dbless}" in
 esac
 
 # -----------------------------------------------------------------------------
+# Adopt pre-existing Kong CRDs (NKP pre-installs Kong CRDs via kubernetes-dashboard)
+# Helm requires ownership labels on any CRD it manages. CRDs installed outside
+# Helm lack these labels and cause "cannot be imported" errors on install.
+# This step is idempotent — --overwrite silently skips already-labeled CRDs.
+# -----------------------------------------------------------------------------
+echo "[install-kong] Adopting existing Kong CRDs for Helm management..."
+KONG_CRDS=$(kubectl get crd -o name 2>/dev/null | grep "konghq.com" || true)
+if [[ -n "$KONG_CRDS" ]]; then
+  for crd in $KONG_CRDS; do
+    kubectl label "$crd" "app.kubernetes.io/managed-by=Helm" --overwrite 2>/dev/null || true
+    kubectl annotate "$crd" \
+      "meta.helm.sh/release-name=${KONG_RELEASE_NAME}" \
+      "meta.helm.sh/release-namespace=${KONG_NAMESPACE}" \
+      --overwrite 2>/dev/null || true
+  done
+  echo "[install-kong] Kong CRDs adopted."
+fi
+
+# -----------------------------------------------------------------------------
 # Deploy Kong
 # -----------------------------------------------------------------------------
 echo "[install-kong] Deploying Kong (release: $KONG_RELEASE_NAME, namespace: $KONG_NAMESPACE)..."
@@ -71,6 +90,7 @@ echo "[install-kong] Deploying Kong (release: $KONG_RELEASE_NAME, namespace: $KO
 helm upgrade --install "$KONG_RELEASE_NAME" kong/kong \
   --namespace "$KONG_NAMESPACE" \
   --create-namespace \
+  --skip-crds \
   --values "${VALUES_DIR}/kong.yaml" \
   --set "proxy.type=${SERVICE_TYPE}" \
   "${MODE_FLAGS[@]}" \

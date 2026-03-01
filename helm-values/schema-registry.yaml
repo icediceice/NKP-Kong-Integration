@@ -24,6 +24,7 @@ cp-schema-registry:
   # ---------------------------------------------------------------------------
   configurationOverrides:
     "schema.compatibility.level": "BACKWARD"
+    "kafkastore.topic.replication.factor": "1"
 
   # ---------------------------------------------------------------------------
   # Resources
@@ -36,15 +37,7 @@ cp-schema-registry:
       cpu: "1"
       memory: "1Gi"
 
-  # ---------------------------------------------------------------------------
-  # Probes
-  # ---------------------------------------------------------------------------
-  readinessProbe:
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    failureThreshold: 4
-
-  livenessProbe:
-    initialDelaySeconds: 60
-    periodSeconds: 15
-    failureThreshold: 3
+  # JMX exporter disabled — avoids dependency on pinned image SHA that may be unavailable
+  prometheus:
+    jmx:
+      enabled: false

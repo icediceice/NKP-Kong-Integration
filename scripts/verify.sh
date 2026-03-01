@@ -18,7 +18,8 @@ section "Kafka pods"
 NOT_READY=$(kubectl get pods -n "$KAFKA_NAMESPACE" \
   -l "app=cp-kafka,release=${KAFKA_RELEASE_NAME}" \
   --no-headers 2>/dev/null \
-  | grep -v -E "Running|Completed" | wc -l || echo 0)
+  | { grep -v -E "Running|Completed" || true; } | wc -l)
+NOT_READY=$((NOT_READY + 0))
 
 if [[ "$NOT_READY" -gt 0 ]]; then
   fail "$NOT_READY Kafka pod(s) not Running"
@@ -60,8 +61,9 @@ section "Schema Registry"
 
 if [[ "${SR_ENABLED:-true}" == "true" ]]; then
   NOT_READY=$(kubectl get pods -n "$KAFKA_NAMESPACE" \
-    -l "app=cp-schema-registry,release=${SR_RELEASE_NAME}" \
-    --no-headers 2>/dev/null | grep -v -E "Running|Completed" | wc -l || echo 0)
+    -l "app=cp-schema-registry,release=${KAFKA_RELEASE_NAME}" \
+    --no-headers 2>/dev/null | { grep -v -E "Running|Completed" || true; } | wc -l)
+  NOT_READY=$((NOT_READY + 0))
   if [[ "$NOT_READY" -gt 0 ]]; then
     fail "Schema Registry pod not Running"
   else
@@ -75,19 +77,20 @@ section "Control Center"
 
 if [[ "${CC_ENABLED:-true}" == "true" ]]; then
   NOT_READY=$(kubectl get pods -n "$KAFKA_NAMESPACE" \
-    -l "app=cp-enterprise-control-center,release=${CC_RELEASE_NAME}" \
-    --no-headers 2>/dev/null | grep -v -E "Running|Completed" | wc -l || echo 0)
+    -l "app=cp-control-center,release=${KAFKA_RELEASE_NAME}" \
+    --no-headers 2>/dev/null | { grep -v -E "Running|Completed" || true; } | wc -l)
+  NOT_READY=$((NOT_READY + 0))
   if [[ "$NOT_READY" -gt 0 ]]; then
     fail "Control Center pod not Running"
   else
     pass "Control Center pod Running"
     CC_SVC_IP=$(kubectl get svc -n "$KAFKA_NAMESPACE" \
-      -l "app=cp-enterprise-control-center,release=${CC_RELEASE_NAME}" \
-      -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+      "${KAFKA_RELEASE_NAME}-cc-lb" \
+      -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
     if [[ -n "$CC_SVC_IP" ]]; then
       info "Control Center LoadBalancer IP: $CC_SVC_IP (port 9021)"
     else
-      info "Control Center LB IP not yet assigned — run: kubectl get svc -n $KAFKA_NAMESPACE"
+      info "Control Center LB IP not yet assigned — run: kubectl get svc -n $KAFKA_NAMESPACE ${KAFKA_RELEASE_NAME}-cc-lb"
     fi
   fi
 fi
@@ -98,7 +101,8 @@ section "Kong pods"
 
 NOT_READY=$(kubectl get pods -n "$KONG_NAMESPACE" \
   -l "app.kubernetes.io/name=kong,app.kubernetes.io/instance=${KONG_RELEASE_NAME}" \
-  --no-headers 2>/dev/null | grep -v -E "Running|Completed" | wc -l || echo 0)
+  --no-headers 2>/dev/null | { grep -v -E "Running|Completed" || true; } | wc -l)
+NOT_READY=$((NOT_READY + 0))
 
 if [[ "$NOT_READY" -gt 0 ]]; then
   fail "$NOT_READY Kong pod(s) not Running"

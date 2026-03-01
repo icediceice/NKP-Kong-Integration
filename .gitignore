@@ -17,6 +17,7 @@ config.env
 
 # Project runtime artifacts
 .kafka-cluster-id
+.cache/
 
 # Logs
 *.log
