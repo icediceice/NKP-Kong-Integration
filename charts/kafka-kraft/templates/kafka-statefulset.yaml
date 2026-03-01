@@ -1,0 +1,140 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "kafka-kraft.kafkaFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ include "kafka-kraft.labels" . | nindent 4 }}
+    app: kafka
+    release: {{ .Release.Name }}
+spec:
+  serviceName: {{ include "kafka-kraft.headlessServiceName" . }}
+  replicas: {{ .Values.kafka.replicaCount }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: kafka
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: kafka
+        release: {{ .Release.Name }}
+    spec:
+      securityContext:
+        runAsUser: 0
+      initContainers:
+        - name: kafka-storage-format
+          image: "{{ .Values.kafka.image.repository }}:{{ .Values.kafka.image.tag }}"
+          imagePullPolicy: {{ .Values.kafka.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              if [ -f /var/lib/kafka/data/meta.properties ]; then
+                echo "[init] Storage already formatted — skipping."
+                exit 0
+              fi
+              echo "[init] Formatting KRaft storage with cluster ID: ${CLUSTER_ID}"
+              printf 'log.dirs=/var/lib/kafka/data\nmetadata.log.dir=/var/lib/kafka/metadata\n' \
+                > /tmp/kraft.properties
+              kafka-storage format \
+                --cluster-id "${CLUSTER_ID}" \
+                --config /tmp/kraft.properties \
+                --ignore-formatted
+              echo "[init] KRaft storage format complete."
+          env:
+            - name: CLUSTER_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "kafka-kraft.clusterIdConfigMapName" . }}
+                  key: clusterId
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/kafka/data
+            - name: metadata
+              mountPath: /var/lib/kafka/metadata
+      containers:
+        - name: kafka
+          image: "{{ .Values.kafka.image.repository }}:{{ .Values.kafka.image.tag }}"
+          imagePullPolicy: {{ .Values.kafka.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              # Extract ordinal from StatefulSet pod name: kafka-0 → 0
+              export KAFKA_NODE_ID="${HOSTNAME##*-}"
+              # Advertised listeners must include this pod's FQDN
+              export KAFKA_ADVERTISED_LISTENERS="BROKER://${HOSTNAME}.{{ include "kafka-kraft.headlessServiceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:9092"
+              exec /etc/confluent/docker/run
+          env:
+            # KRaft mode — no ZooKeeper
+            - name: KAFKA_PROCESS_ROLES
+              value: "broker,controller"
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: {{ include "kafka-kraft.quorumVoters" . | quote }}
+            - name: KAFKA_LISTENERS
+              value: "BROKER://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "BROKER:PLAINTEXT,CONTROLLER:PLAINTEXT"
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "BROKER"
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_LOG_DIRS
+              value: "/var/lib/kafka/data"
+            - name: KAFKA_METADATA_LOG_DIR
+              value: "/var/lib/kafka/metadata"
+            # Cluster ID — read by the Confluent entrypoint for validation
+            - name: CLUSTER_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "kafka-kraft.clusterIdConfigMapName" . }}
+                  key: clusterId
+            # Static config properties
+            {{- range $k, $v := .Values.kafka.config }}
+            - name: KAFKA_{{ $k | upper | replace "." "_" }}
+              value: {{ $v | quote }}
+            {{- end }}
+          ports:
+            - name: broker
+              containerPort: 9092
+            - name: controller
+              containerPort: 9093
+          resources:
+            {{- toYaml .Values.kafka.resources | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: 9092
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 9092
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 6
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/kafka/data
+            - name: metadata
+              mountPath: /var/lib/kafka/metadata
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.kafka.storage.class | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.kafka.storage.size }}
+    - metadata:
+        name: metadata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.kafka.storage.class | quote }}
+        resources:
+          requests:
+            storage: 1Gi

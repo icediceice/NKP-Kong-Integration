@@ -1,0 +1,67 @@
+{{- if .Values.controlCenter.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-control-center
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ include "kafka-kraft.labels" . | nindent 4 }}
+    app: control-center
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.controlCenter.replicaCount }}
+  selector:
+    matchLabels:
+      app: control-center
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: control-center
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: control-center
+          image: "{{ .Values.controlCenter.image.repository }}:{{ .Values.controlCenter.image.tag }}"
+          imagePullPolicy: {{ .Values.controlCenter.image.pullPolicy }}
+          env:
+            - name: CONTROL_CENTER_BOOTSTRAP_SERVERS
+              value: "{{ include "kafka-kraft.clientServiceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:9092"
+            - name: CONTROL_CENTER_KAFKA_BOOTSTRAP_SERVERS
+              value: "{{ include "kafka-kraft.clientServiceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:9092"
+            {{- if .Values.schemaRegistry.enabled }}
+            - name: CONTROL_CENTER_SCHEMA_REGISTRY_URL
+              value: "http://{{ include "kafka-kraft.srServiceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:8081"
+            {{- end }}
+            - name: PORT
+              value: "9021"
+            {{- range $k, $v := .Values.controlCenter.config }}
+            - name: CONTROL_CENTER_{{ $k | upper | replace "." "_" }}
+              value: {{ $v | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 9021
+          resources:
+            {{- toYaml .Values.controlCenter.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 9021
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 8
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 9021
+            initialDelaySeconds: 120
+            periodSeconds: 20
+            failureThreshold: 6
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/confluent-control-center
+      volumes:
+        - name: data
+          emptyDir: {}
+{{- end }}

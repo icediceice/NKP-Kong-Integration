@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kafka-kraft.clusterIdConfigMapName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ include "kafka-kraft.labels" . | nindent 4 }}
+    app: kafka
+    release: {{ .Release.Name }}
+data:
+  clusterId: {{ required "kafka.clusterId must be set (use --set kafka.clusterId=<uuid>)" .Values.kafka.clusterId | quote }}

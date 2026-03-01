@@ -16,17 +16,17 @@ section "Kafka pods"
 # -----------------------------------------------------------------------------
 
 NOT_READY=$(kubectl get pods -n "$KAFKA_NAMESPACE" \
-  -l "app=cp-kafka,release=${KAFKA_RELEASE_NAME}" \
+  -l "app=kafka,release=${KAFKA_RELEASE_NAME}" \
   --no-headers 2>/dev/null \
   | { grep -v -E "Running|Completed" || true; } | wc -l)
 NOT_READY=$((NOT_READY + 0))
 
 if [[ "$NOT_READY" -gt 0 ]]; then
   fail "$NOT_READY Kafka pod(s) not Running"
-  kubectl get pods -n "$KAFKA_NAMESPACE" -l "app=cp-kafka,release=${KAFKA_RELEASE_NAME}" 2>/dev/null || true
+  kubectl get pods -n "$KAFKA_NAMESPACE" -l "app=kafka,release=${KAFKA_RELEASE_NAME}" 2>/dev/null || true
 else
   RUNNING=$(kubectl get pods -n "$KAFKA_NAMESPACE" \
-    -l "app=cp-kafka,release=${KAFKA_RELEASE_NAME}" --no-headers 2>/dev/null | wc -l)
+    -l "app=kafka,release=${KAFKA_RELEASE_NAME}" --no-headers 2>/dev/null | wc -l)
   pass "$RUNNING Kafka pod(s) Running"
 fi
 
@@ -36,7 +36,7 @@ section "Kafka cluster metadata"
 
 # Try to exec into a broker and check broker count
 KAFKA_POD=$(kubectl get pod -n "$KAFKA_NAMESPACE" \
-  -l "app=cp-kafka,release=${KAFKA_RELEASE_NAME}" \
+  -l "app=kafka,release=${KAFKA_RELEASE_NAME}" \
   -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
 
 if [[ -n "$KAFKA_POD" ]]; then
@@ -51,6 +51,16 @@ if [[ -n "$KAFKA_POD" ]]; then
   else
     fail "Expected $KAFKA_BROKER_COUNT brokers, found $BROKER_IDS"
   fi
+
+  # Confirm KRaft mode — quorum status only available in KRaft
+  QUORUM_STATUS=$(kubectl exec -n "$KAFKA_NAMESPACE" "$KAFKA_POD" -- \
+    bash -c "kafka-metadata-quorum --bootstrap-server localhost:9092 describe --status 2>/dev/null | head -1" \
+    2>/dev/null || echo "")
+  if [[ -n "$QUORUM_STATUS" ]]; then
+    pass "KRaft quorum active: $QUORUM_STATUS"
+  else
+    info "KRaft quorum status unavailable (pod may still be starting)"
+  fi
 else
   info "No Kafka pod found to exec into for metadata check"
 fi
@@ -61,7 +71,7 @@ section "Schema Registry"
 
 if [[ "${SR_ENABLED:-true}" == "true" ]]; then
   NOT_READY=$(kubectl get pods -n "$KAFKA_NAMESPACE" \
-    -l "app=cp-schema-registry,release=${KAFKA_RELEASE_NAME}" \
+    -l "app=schema-registry,release=${KAFKA_RELEASE_NAME}" \
     --no-headers 2>/dev/null | { grep -v -E "Running|Completed" || true; } | wc -l)
   NOT_READY=$((NOT_READY + 0))
   if [[ "$NOT_READY" -gt 0 ]]; then
@@ -77,7 +87,7 @@ section "Control Center"
 
 if [[ "${CC_ENABLED:-true}" == "true" ]]; then
   NOT_READY=$(kubectl get pods -n "$KAFKA_NAMESPACE" \
-    -l "app=cp-control-center,release=${KAFKA_RELEASE_NAME}" \
+    -l "app=control-center,release=${KAFKA_RELEASE_NAME}" \
     --no-headers 2>/dev/null | { grep -v -E "Running|Completed" || true; } | wc -l)
   NOT_READY=$((NOT_READY + 0))
   if [[ "$NOT_READY" -gt 0 ]]; then

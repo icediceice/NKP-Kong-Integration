@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kafka-kraft
+description: Kafka KRaft (no ZooKeeper) + Schema Registry + Control Center — hand-crafted for NKP
+type: application
+version: 0.1.0
+appVersion: "7.6.0"

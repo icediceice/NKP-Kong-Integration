@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Install Confluent Platform: Kafka (ZooKeeper mode), Schema Registry,
-# and Control Center — using confluentinc/cp-helm-charts umbrella chart.
+# Install Kafka (KRaft, no ZooKeeper) + Schema Registry + Control Center
+# using the hand-crafted local Helm chart at charts/kafka-kraft/.
 # Sourced by install.sh; all required variables must already be exported.
 # =============================================================================
 set -euo pipefail
 
 trap 'echo "[install-kafka] ERROR at line $LINENO" >&2' ERR
 
-VALUES_DIR="${SCRIPT_DIR}/helm-values"
+CHART_DIR="${SCRIPT_DIR}/charts/kafka-kraft"
 
 # -----------------------------------------------------------------------------
 # Parse image strings into repo + tag components
-# The chart uses separate `image` and `imageTag` fields.
 # -----------------------------------------------------------------------------
 KAFKA_IMAGE_REPO="${KAFKA_IMAGE%%:*}"
 KAFKA_IMAGE_TAG="${KAFKA_IMAGE##*:}"
@@ -22,105 +21,111 @@ CC_IMAGE_REPO="${CC_IMAGE%%:*}"
 CC_IMAGE_TAG="${CC_IMAGE##*:}"
 
 # -----------------------------------------------------------------------------
-# Build Helm version flag
+# Resolve or generate KRaft cluster ID
+#
+# KRaft requires a UUID encoded as 22 base64url characters (16 bytes, no padding).
+# Priority:
+#   1. .kafka-cluster-id file (persists across re-runs)
+#   2. KAFKA_CLUSTER_ID env var (from config.env; UUID or base64url accepted)
+#   3. Auto-generate from /proc/sys/kernel/random/uuid
 # -----------------------------------------------------------------------------
-VERSION_FLAG=""
-if [[ -n "${KAFKA_CHART_VERSION:-}" ]]; then
-  VERSION_FLAG="--version ${KAFKA_CHART_VERSION}"
-fi
+CLUSTER_ID_FILE="${SCRIPT_DIR}/.kafka-cluster-id"
 
-# -----------------------------------------------------------------------------
-# Prepare local patched chart
-# cp-helm-charts 0.6.1 uses policy/v1beta1 PodDisruptionBudget, which was
-# removed in Kubernetes 1.25. We download once, patch, and install locally.
-# -----------------------------------------------------------------------------
-CHART_CACHE="${SCRIPT_DIR}/.cache/cp-helm-charts"
-if [[ ! -d "$CHART_CACHE" ]]; then
-  echo "[install-kafka] Downloading and patching cp-helm-charts for K8s 1.25+ compatibility..."
-  mkdir -p "${SCRIPT_DIR}/.cache"
-  helm pull confluentinc/cp-helm-charts \
-    --untar \
-    --untardir "${SCRIPT_DIR}/.cache" \
-    ${VERSION_FLAG}
-  # Patch policy/v1beta1 PodDisruptionBudget → policy/v1 (K8s 1.25+ removed v1beta1)
-  find "${CHART_CACHE}" -name "*.yaml" \
-    -exec sed -i 's|apiVersion: policy/v1beta1|apiVersion: policy/v1|g' {} \;
-  echo "[install-kafka] Chart patched and cached at .cache/cp-helm-charts"
+uuid_to_base64url() {
+  # Convert a UUID string (36-char with hyphens) to 22-char base64url
+  local hex
+  hex=$(echo "$1" | tr -d '-')
+  if command -v python3 &>/dev/null; then
+    python3 -c "
+import base64
+data = bytes.fromhex('${hex}')
+print(base64.urlsafe_b64encode(data).rstrip(b'=').decode())
+"
+  elif command -v xxd &>/dev/null; then
+    echo "$hex" | xxd -r -p | base64 -w 0 | tr '+/' '-_' | tr -d '='
+  else
+    echo "[install-kafka] ERROR: python3 or xxd required for cluster ID generation" >&2
+    exit 1
+  fi
+}
+
+if [[ -f "$CLUSTER_ID_FILE" ]]; then
+  CLUSTER_ID=$(cat "$CLUSTER_ID_FILE")
+  echo "[install-kafka] Using existing cluster ID from .kafka-cluster-id: $CLUSTER_ID"
+elif [[ -n "${KAFKA_CLUSTER_ID:-}" ]]; then
+  if [[ ${#KAFKA_CLUSTER_ID} -eq 36 ]]; then
+    # UUID format — convert to base64url
+    CLUSTER_ID=$(uuid_to_base64url "$KAFKA_CLUSTER_ID")
+  else
+    # Assume already base64url
+    CLUSTER_ID="$KAFKA_CLUSTER_ID"
+  fi
+  echo "$CLUSTER_ID" > "$CLUSTER_ID_FILE"
+  echo "[install-kafka] Using configured cluster ID: $CLUSTER_ID"
 else
-  echo "[install-kafka] Using cached chart at .cache/cp-helm-charts"
+  RAW_UUID=$(cat /proc/sys/kernel/random/uuid)
+  CLUSTER_ID=$(uuid_to_base64url "$RAW_UUID")
+  echo "$CLUSTER_ID" > "$CLUSTER_ID_FILE"
+  echo "[install-kafka] Generated new cluster ID: $CLUSTER_ID (saved to .kafka-cluster-id)"
+fi
+
+# Validate: must be exactly 22 chars
+if [[ ${#CLUSTER_ID} -ne 22 ]]; then
+  echo "[install-kafka] ERROR: cluster ID must be 22 base64url chars, got: ${#CLUSTER_ID} (${CLUSTER_ID})" >&2
+  exit 1
 fi
 
 # -----------------------------------------------------------------------------
-# Deploy Confluent Platform (Kafka + ZooKeeper + Schema Registry + Control Center)
-# All components deploy as one Helm release using the umbrella chart.
-# The chart uses ZooKeeper mode — KRaft is not supported in cp-helm-charts.
+# Migration: remove old ZooKeeper-based release before installing KRaft
+#
+# ZK-formatted PVCs are incompatible with KRaft storage format.
+# Only uninstall if the existing release uses ZooKeeper (cp-zookeeper key present).
 # -----------------------------------------------------------------------------
-echo "[install-kafka] Deploying Confluent Platform (release: $KAFKA_RELEASE_NAME, namespace: $KAFKA_NAMESPACE)..."
+if helm status "$KAFKA_RELEASE_NAME" -n "$KAFKA_NAMESPACE" &>/dev/null; then
+  if helm get values "$KAFKA_RELEASE_NAME" -n "$KAFKA_NAMESPACE" 2>/dev/null | grep -q 'cp-zookeeper'; then
+    echo "[install-kafka] Detected ZooKeeper-based Helm release — migrating to KRaft..."
+    helm uninstall "$KAFKA_RELEASE_NAME" -n "$KAFKA_NAMESPACE"
+    echo "[install-kafka] Deleting ZK-formatted PVCs (incompatible with KRaft)..."
+    kubectl delete pvc -n "$KAFKA_NAMESPACE" --all --wait=true 2>/dev/null || true
+    echo "[install-kafka] Migration cleanup complete."
+  else
+    echo "[install-kafka] Existing KRaft release found — upgrading in place."
+  fi
+fi
 
-helm upgrade --install "$KAFKA_RELEASE_NAME" "${CHART_CACHE}" \
+# -----------------------------------------------------------------------------
+# Deploy: Kafka (KRaft) + Schema Registry + Control Center
+# Single Helm release from the local chart.
+# -----------------------------------------------------------------------------
+echo "[install-kafka] Deploying KRaft stack (release: $KAFKA_RELEASE_NAME, namespace: $KAFKA_NAMESPACE)..."
+
+helm upgrade --install "$KAFKA_RELEASE_NAME" "$CHART_DIR" \
   --namespace "$KAFKA_NAMESPACE" \
   --create-namespace \
-  --values "${VALUES_DIR}/kafka-kraft.yaml" \
-  --values "${VALUES_DIR}/schema-registry.yaml" \
-  --values "${VALUES_DIR}/control-center.yaml" \
-  --set cp-zookeeper.enabled=true \
-  --set cp-kafka.enabled=true \
-  --set "cp-schema-registry.enabled=${SR_ENABLED:-true}" \
-  --set "cp-control-center.enabled=${CC_ENABLED:-true}" \
-  --set cp-kafka-rest.enabled=false \
-  --set cp-kafka-connect.enabled=false \
-  --set cp-ksql-server.enabled=false \
-  --set "cp-kafka.brokers=${KAFKA_BROKER_COUNT}" \
-  --set "cp-kafka.image=${KAFKA_IMAGE_REPO}" \
-  --set "cp-kafka.imageTag=${KAFKA_IMAGE_TAG}" \
-  --set "cp-kafka.persistence.storageClass=${KAFKA_STORAGE_CLASS}" \
-  --set "cp-kafka.persistence.size=${KAFKA_STORAGE_SIZE}" \
-  --set "cp-kafka.resources.requests.cpu=${KAFKA_CPU_REQUEST}" \
-  --set "cp-kafka.resources.limits.cpu=${KAFKA_CPU_LIMIT}" \
-  --set "cp-kafka.resources.requests.memory=${KAFKA_MEM_REQUEST}" \
-  --set "cp-kafka.resources.limits.memory=${KAFKA_MEM_LIMIT}" \
-  --set "cp-zookeeper.persistence.dataDirStorageClass=${KAFKA_STORAGE_CLASS}" \
-  --set "cp-zookeeper.persistence.dataLogDirStorageClass=${KAFKA_STORAGE_CLASS}" \
-  --set "cp-schema-registry.image=${SR_IMAGE_REPO}" \
-  --set "cp-schema-registry.imageTag=${SR_IMAGE_TAG}" \
-  --set "cp-control-center.image=${CC_IMAGE_REPO}" \
-  --set "cp-control-center.imageTag=${CC_IMAGE_TAG}" \
-  ${VERSION_FLAG} \
+  --values "${SCRIPT_DIR}/helm-values/kafka-kraft.yaml" \
+  --set "kafka.clusterId=${CLUSTER_ID}" \
+  --set "kafka.replicaCount=${KAFKA_BROKER_COUNT}" \
+  --set "kafka.image.repository=${KAFKA_IMAGE_REPO}" \
+  --set "kafka.image.tag=${KAFKA_IMAGE_TAG}" \
+  --set "kafka.storage.class=${KAFKA_STORAGE_CLASS}" \
+  --set "kafka.storage.size=${KAFKA_STORAGE_SIZE}" \
+  --set "kafka.resources.requests.cpu=${KAFKA_CPU_REQUEST}" \
+  --set "kafka.resources.limits.cpu=${KAFKA_CPU_LIMIT}" \
+  --set "kafka.resources.requests.memory=${KAFKA_MEM_REQUEST}" \
+  --set "kafka.resources.limits.memory=${KAFKA_MEM_LIMIT}" \
+  --set "schemaRegistry.enabled=${SR_ENABLED:-true}" \
+  --set "schemaRegistry.image.repository=${SR_IMAGE_REPO}" \
+  --set "schemaRegistry.image.tag=${SR_IMAGE_TAG}" \
+  --set "controlCenter.enabled=${CC_ENABLED:-true}" \
+  --set "controlCenter.image.repository=${CC_IMAGE_REPO}" \
+  --set "controlCenter.image.tag=${CC_IMAGE_TAG}" \
   --timeout "${ROLLOUT_TIMEOUT}s" \
   --wait
 
 echo "[install-kafka] Waiting for Kafka StatefulSet to be ready..."
-kubectl rollout status "statefulset/${KAFKA_RELEASE_NAME}-cp-kafka" \
+kubectl rollout status "statefulset/${KAFKA_RELEASE_NAME}-kafka" \
   -n "$KAFKA_NAMESPACE" \
   --timeout="${ROLLOUT_TIMEOUT}s"
 
-echo "[install-kafka] Kafka ready."
-
-# -----------------------------------------------------------------------------
-# Expose Control Center via LoadBalancer
-# The cp-helm-charts chart hardcodes ClusterIP for all services.
-# We create an additional LoadBalancer service targeting the CC pods.
-# -----------------------------------------------------------------------------
-if [[ "${CC_ENABLED:-true}" == "true" ]]; then
-  echo "[install-kafka] Creating LoadBalancer service for Control Center..."
-  kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Service
-metadata:
-  name: ${KAFKA_RELEASE_NAME}-cc-lb
-  namespace: ${KAFKA_NAMESPACE}
-  labels:
-    app: cp-control-center
-    release: ${KAFKA_RELEASE_NAME}
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 9021
-      targetPort: 9021
-      name: cc-http
-  selector:
-    app: cp-control-center
-    release: ${KAFKA_RELEASE_NAME}
-EOF
-  echo "[install-kafka] Control Center LB service: ${KAFKA_RELEASE_NAME}-cc-lb (port 9021)"
-fi
+echo "[install-kafka] Kafka KRaft stack ready."
+echo "[install-kafka] Control Center LB: ${KAFKA_RELEASE_NAME}-cc-lb (port 9021)"

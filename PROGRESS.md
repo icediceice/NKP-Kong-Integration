@@ -5,9 +5,10 @@
 
 ## Current Focus
 
-**Stack is LIVE on workload01. Ready for Monday 2026-03-03 customer deployment.**
+**KRaft chart complete — ready for cluster deployment.**
 
-All components verified running. Installer is clean and idempotent. Hand-off ready.
+`charts/kafka-kraft/` is built, all scripts updated, syntax checked.
+Next: deploy to workload01 and run verify.sh end-to-end.
 
 ## Task Queue
 
@@ -23,6 +24,23 @@ Upcoming work in priority order:
 - ~~CI/CD pipeline~~
 
 ## Work Log
+
+### 2026-03-01 — KRaft chart implementation
+
+#### Session — replace ZooKeeper with hand-crafted KRaft Helm chart
+
+- **What:** Built `charts/kafka-kraft/` local Helm chart using `confluentinc/cp-server:7.6.0`.
+  True KRaft (no ZooKeeper). Covers Kafka StatefulSet, Schema Registry, Control Center.
+  Rewrote `scripts/install-kafka.sh` to use local chart (removed cp-helm-charts download/patch).
+  Added cluster ID generation (UUID → base64url 22-char), migration step (detect + remove ZK release + PVCs).
+  Updated `scripts/verify.sh` label selectors (`cp-kafka` → `kafka`, etc.) + KRaft quorum check.
+  Updated `helm-values/kafka-kraft.yaml` as static overrides file. Removed old `schema-registry.yaml`
+  and `control-center.yaml` (no longer applicable). Fixed `KAFKA_IMAGE` default to `cp-server:7.6.0`.
+  CC LB service (`${KAFKA_RELEASE_NAME}-cc-lb`) templated in chart — no more kubectl apply.
+- **Files:** `charts/kafka-kraft/` (12 files), `scripts/install-kafka.sh`, `scripts/verify.sh`,
+  `helm-values/kafka-kraft.yaml`, `config.env.example`, `install.sh`
+- **Verified:** `bash -n` all scripts pass; `helm template` renders all 12 resources cleanly
+- **Next:** Deploy to workload01 cluster and run `./install.sh --kafka-only`
 
 ### 2026-03-01
 

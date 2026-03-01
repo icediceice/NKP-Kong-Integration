@@ -1,0 +1,88 @@
+# =============================================================================
+# kafka-kraft chart default values
+# Dynamic overrides (image, replicas, storage, resources) are passed via
+# --set flags in install-kafka.sh. Edit static config here.
+# =============================================================================
+
+kafka:
+  replicaCount: 3
+
+  # Cluster UUID — MUST be overridden at install time via --set kafka.clusterId=<id>
+  clusterId: ""
+
+  image:
+    repository: confluentinc/cp-server
+    tag: "7.6.0"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: "1"
+      memory: 4Gi
+    limits:
+      cpu: "2"
+      memory: 8Gi
+
+  storage:
+    class: default
+    size: 50Gi
+
+  # Static Kafka config properties (translated to server.properties)
+  config:
+    offsets.topic.replication.factor: "3"
+    default.replication.factor: "3"
+    min.insync.replicas: "1"
+    log.retention.hours: "168"
+    log.segment.bytes: "1073741824"
+    num.partitions: "1"
+    transaction.state.log.replication.factor: "3"
+    transaction.state.log.min.isr: "1"
+
+schemaRegistry:
+  enabled: true
+
+  image:
+    repository: confluentinc/cp-schema-registry
+    tag: "7.6.0"
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: "250m"
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+  # kafkastore.topic.replication.factor must be <= kafka.replicaCount
+  config:
+    schema.compatibility.level: BACKWARD
+    kafkastore.topic.replication.factor: "1"
+
+controlCenter:
+  enabled: true
+
+  image:
+    repository: confluentinc/cp-enterprise-control-center
+    tag: "7.6.0"
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+  # CC state is ephemeral (emptyDir) — monitoring history resets on pod restart.
+  # Suitable for POC; add a PVC if you need persistent UI state.
+
+  config:
+    replication.factor: "1"
+    internal.topics.partitions: "1"
+    monitoring.interceptor.topic.partitions: "1"

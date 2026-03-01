@@ -1,0 +1,59 @@
+{{- if .Values.schemaRegistry.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-schema-registry
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ include "kafka-kraft.labels" . | nindent 4 }}
+    app: schema-registry
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.schemaRegistry.replicaCount }}
+  selector:
+    matchLabels:
+      app: schema-registry
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: schema-registry
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: schema-registry
+          image: "{{ .Values.schemaRegistry.image.repository }}:{{ .Values.schemaRegistry.image.tag }}"
+          imagePullPolicy: {{ .Values.schemaRegistry.image.pullPolicy }}
+          env:
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: "http://0.0.0.0:8081"
+            - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
+              value: "PLAINTEXT://{{ include "kafka-kraft.clientServiceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:9092"
+            {{- range $k, $v := .Values.schemaRegistry.config }}
+            - name: SCHEMA_REGISTRY_{{ $k | upper | replace "." "_" }}
+              value: {{ $v | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 8081
+          resources:
+            {{- toYaml .Values.schemaRegistry.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /subjects
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /subjects
+              port: 8081
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 6
+{{- end }}

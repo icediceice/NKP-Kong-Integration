@@ -1,0 +1,20 @@
+{{- if .Values.controlCenter.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kafka-kraft.ccLbServiceName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ include "kafka-kraft.labels" . | nindent 4 }}
+    app: control-center
+    release: {{ .Release.Name }}
+spec:
+  type: LoadBalancer
+  selector:
+    app: control-center
+    release: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 9021
+      targetPort: 9021
+{{- end }}
