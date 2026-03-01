@@ -28,6 +28,7 @@ else
   RUNNING=$(kubectl get pods -n "$KAFKA_NAMESPACE" \
     -l "app=kafka,release=${KAFKA_RELEASE_NAME}" --no-headers 2>/dev/null | wc -l)
   pass "$RUNNING Kafka pod(s) Running"
+  info "Kafka bootstrap (in-cluster): ${KAFKA_RELEASE_NAME}-kafka-client.${KAFKA_NAMESPACE}.svc.cluster.local:9092"
 fi
 
 # -----------------------------------------------------------------------------
@@ -78,6 +79,14 @@ if [[ "${SR_ENABLED:-true}" == "true" ]]; then
     fail "Schema Registry pod not Running"
   else
     pass "Schema Registry pod Running"
+    SR_LB_IP=$(kubectl get svc -n "$KAFKA_NAMESPACE" \
+      "${KAFKA_RELEASE_NAME}-sr-lb" \
+      -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+    if [[ -n "$SR_LB_IP" ]]; then
+      info "Schema Registry: http://${SR_LB_IP}:8081"
+    else
+      info "Schema Registry LB IP not yet assigned — run: kubectl get svc -n $KAFKA_NAMESPACE ${KAFKA_RELEASE_NAME}-sr-lb"
+    fi
   fi
 fi
 

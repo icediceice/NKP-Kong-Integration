@@ -43,6 +43,13 @@ Control Center service names.
 {{- end -}}
 
 {{/*
+Schema Registry LoadBalancer service name.
+*/}}
+{{- define "kafka-kraft.srLbServiceName" -}}
+{{- printf "%s-sr-lb" .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 ConfigMap name for the KRaft cluster ID.
 */}}
 {{- define "kafka-kraft.clusterIdConfigMapName" -}}

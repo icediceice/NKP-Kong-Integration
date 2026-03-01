@@ -31,6 +31,21 @@ Upcoming work in priority order:
 
 ## Work Log
 
+### 2026-03-01 — Add Schema Registry LB + expose all endpoints in summary
+
+- **What:** Kafka and Schema Registry had no external endpoints in the install summary.
+  Added `kafka-sr-lb` LoadBalancer service to the kafka-kraft chart. Updated verify.sh
+  and install.sh summary to show all endpoints:
+  - Kafka bootstrap (in-cluster): `<release>-kafka-client.<ns>.svc.cluster.local:9092`
+  - Schema Registry (external):   `http://<LB-IP>:8081`
+  - Control Center (external):    `http://<LB-IP>:9021`
+  - Kong proxy (external):        `http://<LB-IP>`
+  - Jaeger UI + OTLP (external):  `http://<LB-IP>:16686`, `:4317`, `:4318`
+- **Files:** `charts/kafka-kraft/templates/_helpers.tpl`,
+  `charts/kafka-kraft/templates/schema-registry-service-lb.yaml`,
+  `scripts/verify.sh`, `install.sh`
+- **Live:** `kafka-sr-lb` LB IP on workload01: `10.55.84.62`
+
 ### 2026-03-01 — Full end-to-end teardown + reinstall on workload01
 
 - **What:** Tore down the full stack (Kafka PVCs deleted, cluster ID cleared, all namespaces

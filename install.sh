@@ -754,21 +754,31 @@ if [[ "$JAEGER_ONLY" == "false" ]]; then
   echo "  Kong namespace  : $KONG_NAMESPACE"
   echo ""
   echo "  Endpoints:"
+  echo "    Kafka bootstrap (in-cluster) : ${KAFKA_RELEASE_NAME}-kafka-client.${KAFKA_NAMESPACE}.svc.cluster.local:9092"
+  if [[ "${SR_ENABLED:-true}" == "true" ]]; then
+    SR_IP=$(kubectl get svc -n "$KAFKA_NAMESPACE" "${KAFKA_RELEASE_NAME}-sr-lb" \
+      -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+    if [[ -n "$SR_IP" ]]; then
+      echo "    Schema Registry              : http://${SR_IP}:8081"
+    else
+      echo "    Schema Registry              : kubectl get svc -n $KAFKA_NAMESPACE ${KAFKA_RELEASE_NAME}-sr-lb"
+    fi
+  fi
   if [[ "${CC_ENABLED:-true}" == "true" ]]; then
     CC_IP=$(kubectl get svc -n "$KAFKA_NAMESPACE" "${KAFKA_RELEASE_NAME}-cc-lb" \
       -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
     if [[ -n "$CC_IP" ]]; then
-      echo "    Control Center  : http://${CC_IP}:9021"
+      echo "    Control Center               : http://${CC_IP}:9021"
     else
-      echo "    Control Center  : kubectl get svc -n $KAFKA_NAMESPACE ${KAFKA_RELEASE_NAME}-cc-lb"
+      echo "    Control Center               : kubectl get svc -n $KAFKA_NAMESPACE ${KAFKA_RELEASE_NAME}-cc-lb"
     fi
   fi
   KONG_IP=$(kubectl get svc -n "$KONG_NAMESPACE" "${KONG_RELEASE_NAME}-kong-proxy" \
     -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
   if [[ -n "$KONG_IP" ]]; then
-    echo "    Kong proxy      : http://${KONG_IP}"
+    echo "    Kong proxy                   : http://${KONG_IP}"
   else
-    echo "    Kong proxy      : kubectl get svc -n $KONG_NAMESPACE ${KONG_RELEASE_NAME}-kong-proxy"
+    echo "    Kong proxy                   : kubectl get svc -n $KONG_NAMESPACE ${KONG_RELEASE_NAME}-kong-proxy"
   fi
 fi
 
