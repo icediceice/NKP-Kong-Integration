@@ -72,9 +72,10 @@ fi
 # -----------------------------------------------------------------------------
 # Setup wizard
 # Runs automatically when config.env is absent, or when --reconfigure is passed.
-# Detects cluster topology (storage classes, LoadBalancer availability) and asks
-# for all stack configuration values. Writes results to config.env.
-# Pre-populates every prompt from the existing config.env so --reconfigure is fast.
+# Probes the cluster for topology, available storage classes, LoadBalancer
+# support, existing Helm releases, and chart versions. Every prompt is
+# pre-populated from the existing config.env so --reconfigure is fast.
+# Writes all answers to config.env.
 # -----------------------------------------------------------------------------
 run_setup_wizard() {
   local config_file="$1"
@@ -83,81 +84,141 @@ run_setup_wizard() {
   # Read a value from existing config file; return default if absent
   _cfg() { grep -m1 "^${1}=" "$config_file" 2>/dev/null | cut -d= -f2- || echo "${2}"; }
 
-  local cur_broker_count;  cur_broker_count="$(_cfg  KAFKA_BROKER_COUNT  3)"
-  local cur_storage_size;  cur_storage_size="$(_cfg  KAFKA_STORAGE_SIZE  50Gi)"
-  local cur_mem_request;   cur_mem_request="$(_cfg   KAFKA_MEM_REQUEST   4Gi)"
-  local cur_mem_limit;     cur_mem_limit="$(_cfg     KAFKA_MEM_LIMIT     8Gi)"
-  local cur_cc_enabled;    cur_cc_enabled="$(_cfg    CC_ENABLED          true)"
-  local cur_sr_enabled;    cur_sr_enabled="$(_cfg    SR_ENABLED          true)"
-  local cur_kong_mode;     cur_kong_mode="$(_cfg     KONG_MODE           ingress)"
-  local cur_kong_db;       cur_kong_db="$(_cfg       KONG_DB_MODE        dbless)"
-  local cur_timeout;       cur_timeout="$(_cfg       ROLLOUT_TIMEOUT     300)"
-
+  # ── 1. Cluster probe (silent, informs suggestions throughout) ─────────────
   echo ""
   echo "[install.sh] ── Setup wizard ──────────────────────────────────────────"
+  echo ""
+  echo "  Probing cluster..."
 
-  # ── Storage class ──────────────────────────────────────────────────────────
+  local all_nodes worker_count
+  all_nodes=$(kubectl get nodes --no-headers 2>/dev/null | wc -l); all_nodes=$((all_nodes + 0))
+  worker_count=$(kubectl get nodes -l '!node-role.kubernetes.io/control-plane' \
+    --no-headers 2>/dev/null | wc -l); worker_count=$((worker_count + 0))
+  local cp_count=$(( all_nodes - worker_count ))
+
+  # Smallest worker CPU (cores) and memory (GiB) — used for resource suggestions
+  local min_cpu=0 min_mem_gib=0
+  while IFS=$'\t' read -r cpu mem; do
+    [[ -z "$cpu" ]] && continue
+    local cores; [[ "$cpu" == *m ]] && cores=$(( ${cpu%m} / 1000 )) || cores=$cpu
+    local gib=$(( ${mem%Ki} / 1048576 ))
+    (( min_cpu    == 0 || cores < min_cpu    )) && min_cpu=$cores
+    (( min_mem_gib == 0 || gib   < min_mem_gib )) && min_mem_gib=$gib
+  done < <(kubectl get nodes -l '!node-role.kubernetes.io/control-plane' \
+    -o jsonpath='{range .items[*]}{.status.capacity.cpu}{"\t"}{.status.capacity.memory}{"\n"}{end}' \
+    2>/dev/null)
+
+  printf "  Cluster: %d nodes (%d control-plane, %d workers)\n" "$all_nodes" "$cp_count" "$worker_count"
+  [[ $min_cpu -gt 0 ]] && printf "  Smallest worker: %d CPU cores, %dGi memory\n" "$min_cpu" "$min_mem_gib"
+
+  # Derived resource suggestions
+  local sug_brokers=3
+  (( worker_count > 0 && worker_count < 3 )) && sug_brokers=$worker_count
+
+  local sug_cpu_req=1 sug_cpu_lim=2
+  (( min_cpu > 0 && min_cpu < 4 )) && sug_cpu_lim=$min_cpu
+
+  local sug_mem_req="4Gi" sug_mem_lim="8Gi"
+  if (( min_mem_gib > 0 )); then
+    local r=$(( min_mem_gib / 4 )); (( r < 2 )) && r=2
+    local l=$(( min_mem_gib / 2 )); (( l < 4 )) && l=4
+    sug_mem_req="${r}Gi"; sug_mem_lim="${l}Gi"
+  fi
+
+  local sug_timeout=300; (( all_nodes > 5 )) && sug_timeout=600
+
+  # ── 2. Helm repos (needed for version queries below) ──────────────────────
+  echo "  Adding Helm repositories..."
+  helm repo add confluentinc https://confluentinc.github.io/cp-helm-charts/ 2>/dev/null || true
+  helm repo add kong          https://charts.konghq.com                      2>/dev/null || true
+  helm repo update -q 2>/dev/null || true
+
+  # ── 3. Namespaces ─────────────────────────────────────────────────────────
+  echo ""
+  echo "  ── Namespaces ──────────────────────────────────────────────────────"
+
+  # Show existing non-system namespaces as reference
+  local existing_ns=()
+  mapfile -t existing_ns < <(kubectl get ns --no-headers 2>/dev/null \
+    | awk '{print $1}' \
+    | grep -vE '^(kube-|cattle-|fleet-|calico-|cert-manager|kommander|local$|default$)' \
+    | sort)
+  if [[ ${#existing_ns[@]} -gt 0 ]]; then
+    printf "  Existing namespaces: %s\n" "$(IFS=', '; echo "${existing_ns[*]}")"
+  fi
+
+  local cur_kafka_ns; cur_kafka_ns="$(_cfg KAFKA_NAMESPACE kafka)"
+  local cur_kong_ns;  cur_kong_ns="$(_cfg  KONG_NAMESPACE  kong)"
+  local wiz_kafka_ns wiz_kong_ns
+  read -rp "  Kafka namespace [$cur_kafka_ns]: " wiz_kafka_ns; wiz_kafka_ns="${wiz_kafka_ns:-$cur_kafka_ns}"
+  read -rp "  Kong namespace  [$cur_kong_ns]: "  wiz_kong_ns;  wiz_kong_ns="${wiz_kong_ns:-$cur_kong_ns}"
+
+  # ── 4. Storage class ──────────────────────────────────────────────────────
   echo ""
   local sc_names=() sc_is_default=()
   while IFS=$'\t' read -r name is_default; do
     [[ -z "$name" ]] && continue
-    sc_names+=("$name")
-    sc_is_default+=("${is_default:-false}")
+    sc_names+=("$name"); sc_is_default+=("${is_default:-false}")
   done < <(kubectl get sc \
     -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.annotations.storageclass\.kubernetes\.io/is-default-class}{"\n"}{end}' \
     2>/dev/null)
 
-  local wiz_storage_class
+  local wiz_storage_class cur_sc sc_default_name=""
+  cur_sc="$(_cfg KAFKA_STORAGE_CLASS "")"
+  for i in "${!sc_names[@]}"; do
+    [[ "${sc_is_default[$i]}" == "true" ]] && sc_default_name="${sc_names[$i]}" && break
+  done
+
   if [[ ${#sc_names[@]} -eq 0 ]]; then
-    local cur_sc; cur_sc="$(_cfg KAFKA_STORAGE_CLASS default)"
-    read -rp "  Storage class (none detected, enter manually) [$cur_sc]: " wiz_storage_class
-    wiz_storage_class="${wiz_storage_class:-$cur_sc}"
+    read -rp "  Storage class (none detected) [${cur_sc:-default}]: " wiz_storage_class
+    wiz_storage_class="${wiz_storage_class:-${cur_sc:-default}}"
   elif [[ ${#sc_names[@]} -eq 1 ]]; then
     wiz_storage_class="${sc_names[0]}"
-    echo "  Storage class: $wiz_storage_class (only option)"
+    echo "  Storage class: $wiz_storage_class (auto-selected, only option)"
+  elif [[ -n "$sc_default_name" && ( -z "$cur_sc" || "$cur_sc" == "default" || "$cur_sc" == "$sc_default_name" ) ]]; then
+    # Cluster has a clear default and config doesn't override it — auto-select, no prompt
+    wiz_storage_class="$sc_default_name"
+    echo "  Storage class: $wiz_storage_class (cluster default, auto-selected)"
   else
-    local default_idx=0 cur_sc_idx=0
-    local cur_sc; cur_sc="$(_cfg KAFKA_STORAGE_CLASS "")"
+    # Multiple options, no unambiguous winner — show list and prompt
+    local sc_default_idx=0 sc_cur_idx=0
     echo "  Storage class for Kafka PVCs:"
     for i in "${!sc_names[@]}"; do
       local tag=""
-      [[ "${sc_is_default[$i]}" == "true" ]] && tag+=" (cluster default)" && default_idx=$(( i + 1 ))
-      [[ "${sc_names[$i]}" == "$cur_sc" ]]    && tag+=" (current)" && cur_sc_idx=$(( i + 1 ))
+      [[ "${sc_is_default[$i]}" == "true" ]] && tag+=" (cluster default)" && sc_default_idx=$(( i + 1 ))
+      [[ "${sc_names[$i]}" == "$cur_sc" ]]    && tag+=" (current)"        && sc_cur_idx=$(( i + 1 ))
       printf "    [%d] %s%s\n" "$(( i + 1 ))" "${sc_names[$i]}" "$tag"
     done
     echo ""
-    local hint=$(( cur_sc_idx > 0 ? cur_sc_idx : default_idx ))
+    local sc_hint=$(( sc_cur_idx > 0 ? sc_cur_idx : sc_default_idx ))
     local sc_prompt="  Enter number [1-${#sc_names[@]}]"
-    [[ $hint -gt 0 ]] && sc_prompt+=" (Enter for [$hint])"
+    [[ $sc_hint -gt 0 ]] && sc_prompt+=" (Enter for [$sc_hint])"
     sc_prompt+=": "
     while true; do
       read -rp "$sc_prompt" choice
-      [[ -z "$choice" && $hint -gt 0 ]] && choice=$hint
+      [[ -z "$choice" && $sc_hint -gt 0 ]] && choice=$sc_hint
       if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#sc_names[@]} )); then
-        wiz_storage_class="${sc_names[$((choice - 1))]}"
-        echo "  → $wiz_storage_class"
-        break
+        wiz_storage_class="${sc_names[$((choice - 1))]}"; echo "  → $wiz_storage_class"; break
       fi
       echo "    Invalid — enter a number between 1 and ${#sc_names[@]}."
     done
   fi
 
-  # ── Service type ───────────────────────────────────────────────────────────
+  # ── 5. Service type ───────────────────────────────────────────────────────
   echo ""
   local wiz_service_type lb_available=false
-  if kubectl get crd ipaddresspools.metallb.io &>/dev/null 2>&1; then
-    lb_available=true
-  elif kubectl get svc -A \
+  kubectl get crd ipaddresspools.metallb.io &>/dev/null 2>&1 && lb_available=true
+  if [[ "$lb_available" == "false" ]]; then
+    kubectl get svc -A \
       -o jsonpath='{range .items[?(@.spec.type=="LoadBalancer")]}{.status.loadBalancer.ingress[0].ip}{"\n"}{end}' \
-      2>/dev/null | grep -qE "^[0-9]+\.[0-9]"; then
-    lb_available=true
+      2>/dev/null | grep -qE "^[0-9]+\.[0-9]" && lb_available=true
   fi
 
   if [[ "$lb_available" == "true" ]]; then
     wiz_service_type="LoadBalancer"
     echo "  Service type: LoadBalancer (provisioner detected)"
   else
-    echo "  Service exposure (no LoadBalancer provisioner detected):"
+    echo "  Service type (no LoadBalancer provisioner detected):"
     echo "    [1] NodePort      — works on any cluster, access via node IP + port"
     echo "    [2] LoadBalancer  — requires MetalLB or cloud load balancer"
     echo ""
@@ -169,117 +230,274 @@ run_setup_wizard() {
     echo "  → $wiz_service_type"
   fi
 
-  # ── Kafka ──────────────────────────────────────────────────────────────────
+  # ── 6. Kafka ──────────────────────────────────────────────────────────────
   echo ""
-  echo "  ── Kafka ──────────────────────────────────────────────────────────"
-  local wiz_broker_count wiz_storage_size wiz_mem_request wiz_mem_limit mem_input
+  echo "  ── Kafka ───────────────────────────────────────────────────────────"
 
-  read -rp "  Broker count [$cur_broker_count]: " wiz_broker_count
-  wiz_broker_count="${wiz_broker_count:-$cur_broker_count}"
+  # Chart version
+  local wiz_kafka_ver="" kafka_versions=()
+  mapfile -t kafka_versions < <(
+    helm search repo confluentinc/cp-helm-charts --versions 2>/dev/null \
+      | awk 'NR>1 {print $2}' | head -5)
+  if [[ ${#kafka_versions[@]} -gt 0 ]]; then
+    local cur_kver; cur_kver="$(_cfg KAFKA_CHART_VERSION "")"; local cur_kver_idx=0
+    echo "  Chart version (cp-helm-charts):"
+    for i in "${!kafka_versions[@]}"; do
+      local tag=""; [[ $i -eq 0 ]] && tag+=" (latest)"
+      [[ "${kafka_versions[$i]}" == "$cur_kver" ]] && tag+=" (current)" && cur_kver_idx=$(( i + 1 ))
+      printf "    [%d] %s%s\n" "$(( i + 1 ))" "${kafka_versions[$i]}" "$tag"
+    done
+    echo ""
+    local kv_hint=$(( cur_kver_idx > 0 ? cur_kver_idx : 1 ))
+    read -rp "  Enter number [1-${#kafka_versions[@]}] (Enter for [$kv_hint]): " choice
+    [[ -z "$choice" ]] && choice=$kv_hint
+    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#kafka_versions[@]} )); then
+      wiz_kafka_ver="${kafka_versions[$((choice - 1))]}"
+      # If latest selected, leave blank so helm uses newest
+      [[ "$wiz_kafka_ver" == "${kafka_versions[0]}" ]] && wiz_kafka_ver=""
+    fi
+    echo "  → ${wiz_kafka_ver:-${kafka_versions[0]} (latest)}"
+  fi
 
-  read -rp "  Storage per broker [$cur_storage_size]: " wiz_storage_size
-  wiz_storage_size="${wiz_storage_size:-$cur_storage_size}"
+  # Release name — detect existing releases in namespace
+  local wiz_kafka_rel cur_kafka_rel
+  cur_kafka_rel="$(_cfg KAFKA_RELEASE_NAME kafka)"
+  local kafka_releases=()
+  mapfile -t kafka_releases < <(helm list -n "$wiz_kafka_ns" --short 2>/dev/null || true)
+  if [[ ${#kafka_releases[@]} -gt 0 ]]; then
+    echo ""
+    echo "  Existing Helm releases in '$wiz_kafka_ns':"
+    local cur_rel_idx=0
+    for i in "${!kafka_releases[@]}"; do
+      local tag=""; [[ "${kafka_releases[$i]}" == "$cur_kafka_rel" ]] && tag=" (current)" && cur_rel_idx=$(( i + 1 ))
+      printf "    [%d] %s%s\n" "$(( i + 1 ))" "${kafka_releases[$i]}" "$tag"
+    done
+    printf "    [%d] New release\n" "$(( ${#kafka_releases[@]} + 1 ))"
+    echo ""
+    local rel_hint=$(( cur_rel_idx > 0 ? cur_rel_idx : 1 ))
+    local total_rel=$(( ${#kafka_releases[@]} + 1 ))
+    while true; do
+      read -rp "  Enter number [1-${total_rel}] (Enter for [$rel_hint]): " choice
+      [[ -z "$choice" ]] && choice=$rel_hint
+      if [[ "$choice" =~ ^[0-9]+$ ]]; then
+        if (( choice >= 1 && choice <= ${#kafka_releases[@]} )); then
+          wiz_kafka_rel="${kafka_releases[$((choice - 1))]}"; echo "  → upgrade: $wiz_kafka_rel"; break
+        elif (( choice == total_rel )); then
+          read -rp "  New release name [$cur_kafka_rel]: " wiz_kafka_rel
+          wiz_kafka_rel="${wiz_kafka_rel:-$cur_kafka_rel}"; echo "  → new: $wiz_kafka_rel"; break
+        fi
+      fi
+      echo "    Invalid — enter a number between 1 and ${total_rel}."
+    done
+  else
+    read -rp "  Kafka release name [$cur_kafka_rel]: " wiz_kafka_rel
+    wiz_kafka_rel="${wiz_kafka_rel:-$cur_kafka_rel}"
+  fi
 
-  read -rp "  Memory request/limit [${cur_mem_request}/${cur_mem_limit}]: " mem_input
+  # Broker count
+  echo ""
+  local cur_brokers; cur_brokers="$(_cfg KAFKA_BROKER_COUNT "$sug_brokers")"
+  (( worker_count > 0 )) && printf "  Worker nodes: %d  →  recommended: %d (≤ worker count)\n" \
+    "$worker_count" "$sug_brokers"
+  local wiz_brokers
+  read -rp "  Broker count [$cur_brokers]: " wiz_brokers; wiz_brokers="${wiz_brokers:-$cur_brokers}"
+
+  # Storage per broker
+  local cur_storage; cur_storage="$(_cfg KAFKA_STORAGE_SIZE 50Gi)"; local wiz_storage
+  read -rp "  Storage per broker [$cur_storage]: " wiz_storage; wiz_storage="${wiz_storage:-$cur_storage}"
+
+  # CPU per broker
+  local cur_cpu_req; cur_cpu_req="$(_cfg KAFKA_CPU_REQUEST "$sug_cpu_req")"
+  local cur_cpu_lim; cur_cpu_lim="$(_cfg KAFKA_CPU_LIMIT   "$sug_cpu_lim")"
+  (( min_cpu > 0 )) && printf "  Smallest worker: %d CPU cores\n" "$min_cpu"
+  local cpu_input wiz_cpu_req wiz_cpu_lim
+  read -rp "  CPU per broker — request/limit [${cur_cpu_req}/${cur_cpu_lim}]: " cpu_input
+  if [[ -z "$cpu_input" ]]; then
+    wiz_cpu_req="$cur_cpu_req"; wiz_cpu_lim="$cur_cpu_lim"
+  else
+    wiz_cpu_req="${cpu_input%%/*}"; wiz_cpu_lim="${cpu_input##*/}"
+  fi
+
+  # Memory per broker
+  local cur_mem_req; cur_mem_req="$(_cfg KAFKA_MEM_REQUEST "$sug_mem_req")"
+  local cur_mem_lim; cur_mem_lim="$(_cfg KAFKA_MEM_LIMIT   "$sug_mem_lim")"
+  (( min_mem_gib > 0 )) && printf "  Smallest worker: %dGi memory\n" "$min_mem_gib"
+  local mem_input wiz_mem_req wiz_mem_lim
+  read -rp "  Memory per broker — request/limit [${cur_mem_req}/${cur_mem_lim}]: " mem_input
   if [[ -z "$mem_input" ]]; then
-    wiz_mem_request="$cur_mem_request"
-    wiz_mem_limit="$cur_mem_limit"
+    wiz_mem_req="$cur_mem_req"; wiz_mem_lim="$cur_mem_lim"
   else
-    wiz_mem_request="${mem_input%%/*}"
-    wiz_mem_limit="${mem_input##*/}"
+    wiz_mem_req="${mem_input%%/*}"; wiz_mem_lim="${mem_input##*/}"
   fi
 
-  # ── Components ─────────────────────────────────────────────────────────────
+  # ── 7. Components ─────────────────────────────────────────────────────────
   echo ""
-  echo "  ── Components ─────────────────────────────────────────────────────"
-  local wiz_cc_enabled wiz_sr_enabled
+  echo "  ── Components ──────────────────────────────────────────────────────"
+  local cur_cc; cur_cc="$(_cfg CC_ENABLED true)"; local wiz_cc
+  local cur_sr; cur_sr="$(_cfg SR_ENABLED true)"; local wiz_sr
 
-  local cc_hint="Y/n"; [[ "$cur_cc_enabled" == "false" ]] && cc_hint="y/N"
+  local cc_hint="Y/n"; [[ "$cur_cc" == "false" ]] && cc_hint="y/N"
   read -rp "  Enable Control Center (Kafka management UI)? [$cc_hint]: " yn
-  if [[ -z "$yn" ]]; then
-    wiz_cc_enabled="$cur_cc_enabled"
-  elif [[ "${yn,,}" == "n" || "${yn,,}" == "no" ]]; then
-    wiz_cc_enabled="false"
-  else
-    wiz_cc_enabled="true"
-  fi
+  if   [[ -z "$yn" ]];                            then wiz_cc="$cur_cc"
+  elif [[ "${yn,,}" == "n" || "${yn,,}" == "no" ]]; then wiz_cc="false"
+  else wiz_cc="true"; fi
 
-  local sr_hint="Y/n"; [[ "$cur_sr_enabled" == "false" ]] && sr_hint="y/N"
+  local sr_hint="Y/n"; [[ "$cur_sr" == "false" ]] && sr_hint="y/N"
   read -rp "  Enable Schema Registry? [$sr_hint]: " yn
-  if [[ -z "$yn" ]]; then
-    wiz_sr_enabled="$cur_sr_enabled"
-  elif [[ "${yn,,}" == "n" || "${yn,,}" == "no" ]]; then
-    wiz_sr_enabled="false"
-  else
-    wiz_sr_enabled="true"
+  if   [[ -z "$yn" ]];                            then wiz_sr="$cur_sr"
+  elif [[ "${yn,,}" == "n" || "${yn,,}" == "no" ]]; then wiz_sr="false"
+  else wiz_sr="true"; fi
+
+  # ── 8. Kong ───────────────────────────────────────────────────────────────
+  echo ""
+  echo "  ── Kong ────────────────────────────────────────────────────────────"
+
+  # Chart version
+  local wiz_kong_ver="" kong_versions=()
+  mapfile -t kong_versions < <(
+    helm search repo kong/kong --versions 2>/dev/null | awk 'NR>1 {print $2}' | head -5)
+  if [[ ${#kong_versions[@]} -gt 0 ]]; then
+    local cur_kong_ver; cur_kong_ver="$(_cfg KONG_CHART_VERSION "")"; local cur_kgv_idx=0
+    echo "  Chart version (kong/kong):"
+    for i in "${!kong_versions[@]}"; do
+      local tag=""; [[ $i -eq 0 ]] && tag+=" (latest)"
+      [[ "${kong_versions[$i]}" == "$cur_kong_ver" ]] && tag+=" (current)" && cur_kgv_idx=$(( i + 1 ))
+      printf "    [%d] %s%s\n" "$(( i + 1 ))" "${kong_versions[$i]}" "$tag"
+    done
+    echo ""
+    local kgv_hint=$(( cur_kgv_idx > 0 ? cur_kgv_idx : 1 ))
+    read -rp "  Enter number [1-${#kong_versions[@]}] (Enter for [$kgv_hint]): " choice
+    [[ -z "$choice" ]] && choice=$kgv_hint
+    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#kong_versions[@]} )); then
+      wiz_kong_ver="${kong_versions[$((choice - 1))]}"
+      [[ "$wiz_kong_ver" == "${kong_versions[0]}" ]] && wiz_kong_ver=""
+    fi
+    echo "  → ${wiz_kong_ver:-${kong_versions[0]} (latest)}"
   fi
 
-  # ── Kong ───────────────────────────────────────────────────────────────────
-  echo ""
-  echo "  ── Kong ───────────────────────────────────────────────────────────"
-  local wiz_kong_mode wiz_kong_db
+  # Release name — detect existing releases
+  local wiz_kong_rel cur_kong_rel
+  cur_kong_rel="$(_cfg KONG_RELEASE_NAME kong)"
+  local kong_releases=()
+  mapfile -t kong_releases < <(helm list -n "$wiz_kong_ns" --short 2>/dev/null || true)
+  if [[ ${#kong_releases[@]} -gt 0 ]]; then
+    echo ""
+    echo "  Existing Helm releases in '$wiz_kong_ns':"
+    local cur_kong_rel_idx=0
+    for i in "${!kong_releases[@]}"; do
+      local tag=""; [[ "${kong_releases[$i]}" == "$cur_kong_rel" ]] && tag=" (current)" && cur_kong_rel_idx=$(( i + 1 ))
+      printf "    [%d] %s%s\n" "$(( i + 1 ))" "${kong_releases[$i]}" "$tag"
+    done
+    printf "    [%d] New release\n" "$(( ${#kong_releases[@]} + 1 ))"
+    echo ""
+    local kong_hint=$(( cur_kong_rel_idx > 0 ? cur_kong_rel_idx : 1 ))
+    local total_kong=$(( ${#kong_releases[@]} + 1 ))
+    while true; do
+      read -rp "  Enter number [1-${total_kong}] (Enter for [$kong_hint]): " choice
+      [[ -z "$choice" ]] && choice=$kong_hint
+      if [[ "$choice" =~ ^[0-9]+$ ]]; then
+        if (( choice >= 1 && choice <= ${#kong_releases[@]} )); then
+          wiz_kong_rel="${kong_releases[$((choice - 1))]}"; echo "  → upgrade: $wiz_kong_rel"; break
+        elif (( choice == total_kong )); then
+          read -rp "  New release name [$cur_kong_rel]: " wiz_kong_rel
+          wiz_kong_rel="${wiz_kong_rel:-$cur_kong_rel}"; echo "  → new: $wiz_kong_rel"; break
+        fi
+      fi
+      echo "    Invalid — enter a number between 1 and ${total_kong}."
+    done
+  else
+    read -rp "  Kong release name [$cur_kong_rel]: " wiz_kong_rel
+    wiz_kong_rel="${wiz_kong_rel:-$cur_kong_rel}"
+  fi
 
+  # Kong mode — suggest ingress if CRDs already present
+  echo ""
+  local crd_present=false
+  kubectl get crd kongplugins.configuration.konghq.com &>/dev/null 2>&1 && crd_present=true
+  local cur_kong_mode; cur_kong_mode="$(_cfg KONG_MODE ingress)"
   local kong_mode_def=1; [[ "$cur_kong_mode" == "gateway" ]] && kong_mode_def=2
   echo "  Deployment mode:"
-  echo "    [1] ingress  — Kong Ingress Controller, Kubernetes-native"
-  echo "    [2] gateway  — Standalone proxy"
+  local crd_note=""; [[ "$crd_present" == "true" ]] && crd_note=" ← Kong CRDs detected on cluster"
+  printf "    [1] ingress  — Kong Ingress Controller, Kubernetes-native%s\n" "$crd_note"
+  echo "    [2] gateway  — Standalone proxy, no Kubernetes integration"
   read -rp "  Enter number [1-2] (Enter for [$kong_mode_def]): " choice
-  case "${choice:-$kong_mode_def}" in
-    2) wiz_kong_mode="gateway" ;;
-    *) wiz_kong_mode="ingress" ;;
-  esac
+  local wiz_kong_mode="ingress"; [[ "${choice:-$kong_mode_def}" == "2" ]] && wiz_kong_mode="gateway"
 
+  # Kong DB mode
+  local cur_kong_db; cur_kong_db="$(_cfg KONG_DB_MODE dbless)"
   local kong_db_def=1; [[ "$cur_kong_db" == "postgres" ]] && kong_db_def=2
   echo "  Database mode:"
-  echo "    [1] dbless   — Declarative, no database needed"
+  echo "    [1] dbless   — Declarative config, no database needed"
   echo "    [2] postgres — Postgres-backed, supports live Admin API writes"
   read -rp "  Enter number [1-2] (Enter for [$kong_db_def]): " choice
-  case "${choice:-$kong_db_def}" in
-    2) wiz_kong_db="postgres" ;;
-    *) wiz_kong_db="dbless" ;;
-  esac
+  local wiz_kong_db="dbless"; [[ "${choice:-$kong_db_def}" == "2" ]] && wiz_kong_db="postgres"
 
-  # ── Timeouts ───────────────────────────────────────────────────────────────
+  # ── 9. Timeouts ───────────────────────────────────────────────────────────
   echo ""
+  local cur_timeout; cur_timeout="$(_cfg ROLLOUT_TIMEOUT "$sug_timeout")"
+  (( all_nodes > 5 )) && echo "  Large cluster detected — suggesting ${sug_timeout}s timeout"
   local wiz_timeout
   read -rp "  Rollout timeout seconds [$cur_timeout]: " wiz_timeout
   wiz_timeout="${wiz_timeout:-$cur_timeout}"
 
-  # ── Write config.env ───────────────────────────────────────────────────────
+  # ── 10. Summary + confirmation ────────────────────────────────────────────
+  echo ""
+  echo "  ── Summary ─────────────────────────────────────────────────────────"
+  printf "  Cluster       : %s\n"  "$(basename "${KUBECONFIG:-default}")"
+  printf "  Namespaces    : kafka=%s  kong=%s\n" "$wiz_kafka_ns" "$wiz_kong_ns"
+  printf "  Storage class : %s\n"  "$wiz_storage_class"
+  printf "  Service type  : %s\n"  "$wiz_service_type"
+  echo   "  Kafka"
+  printf "    Release     : %s  (chart: %s)\n" "$wiz_kafka_rel" "${wiz_kafka_ver:-latest}"
+  printf "    Brokers     : %s × CPU %s/%s  Memory %s/%s  Storage %s\n" \
+    "$wiz_brokers" "$wiz_cpu_req" "$wiz_cpu_lim" "$wiz_mem_req" "$wiz_mem_lim" "$wiz_storage"
+  printf "    Components  : control-center=%s  schema-registry=%s\n" "$wiz_cc" "$wiz_sr"
+  echo   "  Kong"
+  printf "    Release     : %s  (chart: %s)\n" "$wiz_kong_rel" "${wiz_kong_ver:-latest}"
+  printf "    Mode        : %s / %s\n"          "$wiz_kong_mode" "$wiz_kong_db"
+  printf "  Timeout       : %ss\n"              "$wiz_timeout"
+  echo ""
+  read -rp "  Save to config.env and proceed? [Y/n]: " yn
+  if [[ "${yn,,}" == "n" || "${yn,,}" == "no" ]]; then
+    echo "  Aborted — run './install.sh --reconfigure' to restart the wizard."
+    exit 0
+  fi
+
+  # ── 11. Write config.env ──────────────────────────────────────────────────
   echo ""
   cat > "$config_file" <<EOF
 # Generated by install.sh wizard — $(date -u +"%Y-%m-%d %H:%M UTC")
 # Cluster: $(basename "${KUBECONFIG:-default}")
 # Re-run wizard: ./install.sh --reconfigure
 
-KAFKA_NAMESPACE=kafka
-KONG_NAMESPACE=kong
+KAFKA_NAMESPACE=${wiz_kafka_ns}
+KONG_NAMESPACE=${wiz_kong_ns}
 
-KAFKA_BROKER_COUNT=${wiz_broker_count}
+KAFKA_BROKER_COUNT=${wiz_brokers}
 KAFKA_IMAGE=confluentinc/cp-server:7.6.0
 KAFKA_STORAGE_CLASS=${wiz_storage_class}
-KAFKA_STORAGE_SIZE=${wiz_storage_size}
-KAFKA_CPU_REQUEST=1
-KAFKA_CPU_LIMIT=2
-KAFKA_MEM_REQUEST=${wiz_mem_request}
-KAFKA_MEM_LIMIT=${wiz_mem_limit}
+KAFKA_STORAGE_SIZE=${wiz_storage}
+KAFKA_CPU_REQUEST=${wiz_cpu_req}
+KAFKA_CPU_LIMIT=${wiz_cpu_lim}
+KAFKA_MEM_REQUEST=${wiz_mem_req}
+KAFKA_MEM_LIMIT=${wiz_mem_lim}
 KAFKA_CLUSTER_ID=
-KAFKA_RELEASE_NAME=kafka
-KAFKA_CHART_VERSION=
+KAFKA_RELEASE_NAME=${wiz_kafka_rel}
+KAFKA_CHART_VERSION=${wiz_kafka_ver}
 
-CC_ENABLED=${wiz_cc_enabled}
+CC_ENABLED=${wiz_cc}
 CC_IMAGE=confluentinc/cp-enterprise-control-center:7.6.0
 CC_STORAGE_SIZE=10Gi
 CC_RELEASE_NAME=control-center
 
-SR_ENABLED=${wiz_sr_enabled}
+SR_ENABLED=${wiz_sr}
 SR_IMAGE=confluentinc/cp-schema-registry:7.6.0
 SR_RELEASE_NAME=schema-registry
 
 KONG_MODE=${wiz_kong_mode}
 KONG_DB_MODE=${wiz_kong_db}
-KONG_RELEASE_NAME=kong
-KONG_CHART_VERSION=
+KONG_RELEASE_NAME=${wiz_kong_rel}
+KONG_CHART_VERSION=${wiz_kong_ver}
 
 SERVICE_TYPE=${wiz_service_type}
 ROLLOUT_TIMEOUT=${wiz_timeout}
