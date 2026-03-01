@@ -5,10 +5,11 @@
 
 ## Current Focus
 
-**KRaft chart complete — ready for cluster deployment.**
+**KRaft stack LIVE on workload01. All checks passing.**
 
-`charts/kafka-kraft/` is built, all scripts updated, syntax checked.
-Next: deploy to workload01 and run verify.sh end-to-end.
+True KRaft (no ZooKeeper), 3 brokers, Schema Registry, Control Center.
+KRaft quorum confirmed: ClusterId `3VgAlrpUR2e-uMprQQCBHQ`, voters [0,1,2].
+install.sh --kafka-only idempotent upgrade: exit 0. verify.sh: All checks passed.
 
 ## Task Queue
 
@@ -24,6 +25,29 @@ Upcoming work in priority order:
 - ~~CI/CD pipeline~~
 
 ## Work Log
+
+### 2026-03-01 — KRaft live install + bug fixes
+
+#### Session — live deploy to workload01, 3 bugs found and fixed
+
+- **What:** Deployed KRaft chart to live workload01 cluster. Fixed 3 bugs:
+  1. **Orphan cc-lb service**: old `kubectl apply` service blocked new Helm-managed one.
+     Fix: pre-install orphan cleanup loop in install-kafka.sh.
+  2. **kafka-storage format needs full KRaft config**: minimal props caused "Missing
+     zookeeper.connect" fallback. Fix: write complete props incl. process.roles +
+     advertised.listeners using `$HOSTNAME` (available in init container).
+  3. **ext4 lost+found crash**: Nutanix volumes have `lost+found` at PVC root;
+     Kafka's LogManager rejects it. Fix: `KAFKA_LOG_DIRS=/var/lib/kafka/data/logs`
+     (subdirectory). Also fixed idempotency check: `meta.properties` is in
+     `metadata.log.dir`, not `log.dirs`.
+- **Result:** `verify.sh: All checks passed.`
+  - 3 Kafka KRaft pods (1/1 Running), SR 1/1, CC 1/1, Kong 1/1
+  - KRaft quorum: ClusterId `3VgAlrpUR2e-uMprQQCBHQ`, voters [0,1,2], no ZooKeeper
+  - CC LB: `10.55.84.59:9021`
+  - install.sh --kafka-only idempotent upgrade: exit 0
+- **Files:** `scripts/install-kafka.sh`, `charts/kafka-kraft/templates/kafka-statefulset.yaml`
+- **Commit:** `2e59034`
+- **Next:** Stack ready for customer hand-off Monday 2026-03-03
 
 ### 2026-03-01 — KRaft chart implementation
 
