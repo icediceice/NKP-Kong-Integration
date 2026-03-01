@@ -1,14 +1,19 @@
 # =============================================================================
-# Jaeger — Distributed Tracing
-# Static Helm overrides. Dynamic values (strategy, service type, storage)
-# are applied as --set flags from scripts/install-jaeger.sh.
-# Chart: jaegertracing/jaeger
+# Jaeger v2 — Distributed Tracing
+# Chart: jaegertracing/jaeger v4.x  (appVersion: Jaeger 2.x)
+#
+# Jaeger v2 is a single binary (no separate collector/query/agent pods).
+# All components — receiver, storage, query UI — run in one deployment.
+# Default storage is in-memory. For persistent storage, provide a userconfig
+# pointing to an external Elasticsearch (see JAEGER_STRATEGY=production notes
+# in config.env.example).
+#
+# Static Helm overrides. Dynamic values (service type) are applied as --set
+# flags from scripts/install-jaeger.sh.
 # =============================================================================
 
-# AllInOne — single-pod deployment, in-memory storage (POC default, JAEGER_STRATEGY=allInOne)
-allInOne:
-  image:
-    tag: "1.57.0"
+jaeger:
+  replicas: 1
   resources:
     requests:
       cpu: "200m"
@@ -16,36 +21,16 @@ allInOne:
     limits:
       cpu: "500m"
       memory: "512Mi"
-  # Expose gRPC (OTLP), Thrift HTTP, and Jaeger UI
-  extraEnv:
-    - name: COLLECTOR_OTLP_ENABLED
-      value: "true"
 
-# Query UI — used in production strategy (JAEGER_STRATEGY=production)
-query:
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: "100m"
-      memory: "128Mi"
-    limits:
-      cpu: "200m"
-      memory: "256Mi"
+# Disable ES maintenance jobs — not needed for in-memory or manually managed ES
+spark:
+  enabled: false
 
-# Collector — used in production strategy
-collector:
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: "200m"
-      memory: "256Mi"
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-  extraEnv:
-    - name: COLLECTOR_OTLP_ENABLED
-      value: "true"
+esIndexCleaner:
+  enabled: false
 
-# Agent is deprecated in Jaeger 1.35+ — use OTLP directly to collector instead
-agent:
+esRollover:
+  enabled: false
+
+esLookback:
   enabled: false

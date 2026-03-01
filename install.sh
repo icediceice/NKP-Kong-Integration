@@ -332,15 +332,23 @@ run_setup_wizard() {
   elif [[ "${yn,,}" == "n" || "${yn,,}" == "no" ]]; then wiz_jaeger="false"
   else wiz_jaeger="true"; fi
 
+  local wiz_jaeger_es_url cur_jaeger_es_url
+  cur_jaeger_es_url="$(_cfg JAEGER_ES_URL "")"
   wiz_jaeger_strategy="$cur_jaeger_strategy"
+  wiz_jaeger_es_url="$cur_jaeger_es_url"
+
   if [[ "$wiz_jaeger" == "true" ]]; then
     local jaeger_strat_def=1; [[ "$cur_jaeger_strategy" == "production" ]] && jaeger_strat_def=2
     echo "  Jaeger strategy:"
-    echo "    [1] allInOne   — Single pod, in-memory storage (POC default)"
-    echo "    [2] production — Separate components with Elasticsearch backend"
+    echo "    [1] allInOne   — In-memory storage, zero dependencies (POC default)"
+    echo "    [2] production — Elasticsearch-backed (requires JAEGER_ES_URL)"
     read -rp "  Enter number [1-2] (Enter for [$jaeger_strat_def]): " choice
     case "${choice:-$jaeger_strat_def}" in
-      2) wiz_jaeger_strategy="production" ;;
+      2)
+        wiz_jaeger_strategy="production"
+        read -rp "  Elasticsearch URL [${cur_jaeger_es_url:-http://elasticsearch:9200}]: " wiz_jaeger_es_url
+        wiz_jaeger_es_url="${wiz_jaeger_es_url:-${cur_jaeger_es_url:-http://elasticsearch:9200}}"
+        ;;
       *) wiz_jaeger_strategy="allInOne" ;;
     esac
     echo "  → $wiz_jaeger_strategy"
@@ -498,7 +506,7 @@ JAEGER_ENABLED=${wiz_jaeger}
 JAEGER_NAMESPACE=observability
 JAEGER_RELEASE_NAME=jaeger
 JAEGER_STRATEGY=${wiz_jaeger_strategy}
-JAEGER_STORAGE_TYPE=elasticsearch
+JAEGER_ES_URL=${wiz_jaeger_es_url}
 
 SERVICE_TYPE=${wiz_service_type}
 ROLLOUT_TIMEOUT=${wiz_timeout}
@@ -571,7 +579,7 @@ JAEGER_ENABLED="${JAEGER_ENABLED:-false}"
 JAEGER_NAMESPACE="${JAEGER_NAMESPACE:-observability}"
 JAEGER_RELEASE_NAME="${JAEGER_RELEASE_NAME:-jaeger}"
 JAEGER_STRATEGY="${JAEGER_STRATEGY:-allInOne}"
-JAEGER_STORAGE_TYPE="${JAEGER_STORAGE_TYPE:-elasticsearch}"
+JAEGER_ES_URL="${JAEGER_ES_URL:-}"
 SERVICE_TYPE="${SERVICE_TYPE:-LoadBalancer}"
 ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-300}"
 
@@ -583,7 +591,7 @@ export KAFKA_STORAGE_CLASS KAFKA_STORAGE_SIZE KAFKA_CPU_REQUEST KAFKA_CPU_LIMIT
 export KAFKA_MEM_REQUEST KAFKA_MEM_LIMIT KAFKA_CLUSTER_ID KAFKA_RELEASE_NAME
 export CC_ENABLED CC_IMAGE SR_ENABLED SR_IMAGE
 export KONG_MODE KONG_DB_MODE KONG_RELEASE_NAME KONG_CHART_VERSION
-export JAEGER_ENABLED JAEGER_NAMESPACE JAEGER_RELEASE_NAME JAEGER_STRATEGY JAEGER_STORAGE_TYPE
+export JAEGER_ENABLED JAEGER_NAMESPACE JAEGER_RELEASE_NAME JAEGER_STRATEGY JAEGER_ES_URL
 export SERVICE_TYPE ROLLOUT_TIMEOUT JAEGER_ONLY
 export SCRIPT_DIR
 
@@ -766,7 +774,8 @@ fi
 
 if [[ "$JAEGER_ENABLED" == "true" ]]; then
   echo "  Jaeger namespace: $JAEGER_NAMESPACE"
-  JAEGER_IP=$(kubectl get svc -n "$JAEGER_NAMESPACE" "${JAEGER_RELEASE_NAME}-query" \
+  # Jaeger v2: service name = release name (single service, all ports)
+  JAEGER_IP=$(kubectl get svc -n "$JAEGER_NAMESPACE" "${JAEGER_RELEASE_NAME}" \
     -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
   echo ""
   echo "  Jaeger endpoints:"
@@ -776,7 +785,7 @@ if [[ "$JAEGER_ENABLED" == "true" ]]; then
     echo "    OTLP HTTP       : http://${JAEGER_IP}:4318"
     echo "    Thrift HTTP     : http://${JAEGER_IP}:14268/api/traces"
   else
-    echo "    kubectl get svc -n $JAEGER_NAMESPACE ${JAEGER_RELEASE_NAME}-query"
+    echo "    kubectl get svc -n $JAEGER_NAMESPACE ${JAEGER_RELEASE_NAME}"
   fi
 fi
 

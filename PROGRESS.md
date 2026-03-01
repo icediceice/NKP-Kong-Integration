@@ -30,6 +30,27 @@ Upcoming work in priority order:
 
 ## Work Log
 
+### 2026-03-01 — Jaeger bug-fix pass (chart inspection, no live cluster)
+
+- **What:** Discovered chart is jaegertracing/jaeger v4.5.0 (Jaeger 2.15.1) — completely
+  different API from Jaeger v1. All original `--set` flags were wrong. Fixed everything:
+  1. **helm-values/jaeger.yaml** — Removed invalid v1 keys (`allInOne`, `collector`, `query`,
+     `agent`). Correct top-level key is `jaeger.resources`. Disabled unused maintenance jobs.
+  2. **scripts/install-jaeger.sh** — Removed all invalid `--set` flags (`allInOne.enabled`,
+     `collector.enabled`, `query.enabled`, `agent.enabled`, `storage.type=memory`,
+     `provisionDataStore.*`). Fixed service type flag to `jaeger.service.type`. Fixed pod wait
+     label to actual chart labels (`app.kubernetes.io/name=jaeger,...`). Rewrote production
+     mode to write a temp values file (avoids `--set-json` multiline quoting issues).
+  3. **scripts/verify.sh** — Fixed service name from `${RELEASE}-query` to `${RELEASE}` (single
+     service in Jaeger v2). Fixed pod label selector.
+  4. **install.sh summary** — Fixed service name same as above.
+  5. **config.env.example** — Replaced `JAEGER_STORAGE_TYPE` with `JAEGER_ES_URL` (production).
+  6. **scripts/preflight.sh** — Skip StorageClass and Kafka resource checks when `--jaeger-only`.
+     Added Jaeger repo reachability check when Jaeger is enabled.
+- **Validation:** helm template dry-run passes. JSON rendered correctly. All bash -n clean.
+- **Files:** All 6 files above
+- **Next:** Deploy to cluster when available and validate live endpoints
+
 ### 2026-03-01 — Jaeger optional component
 
 - **What:** Added Jaeger distributed tracing as an optional workflow.

@@ -60,7 +60,7 @@ if [[ "$NODE_COUNT" -lt 1 ]]; then
   fail "No nodes found in cluster"
 else
   ok "$NODE_COUNT node(s) found"
-  if [[ "$NODE_COUNT" -lt 3 ]]; then
+  if [[ "${JAEGER_ONLY:-false}" == "false" && "$NODE_COUNT" -lt 3 ]]; then
     warn "Fewer than 3 nodes — Kafka KRaft quorum requires 3 pods; ensure they can schedule"
   fi
 fi
@@ -69,7 +69,9 @@ fi
 section "StorageClass"
 # -----------------------------------------------------------------------------
 
-if ! kubectl get storageclass "$KAFKA_STORAGE_CLASS" &>/dev/null; then
+if [[ "${JAEGER_ONLY:-false}" == "true" ]]; then
+  ok "StorageClass check skipped (--jaeger-only)"
+elif ! kubectl get storageclass "$KAFKA_STORAGE_CLASS" &>/dev/null; then
   fail "StorageClass '$KAFKA_STORAGE_CLASS' not found. Update KAFKA_STORAGE_CLASS in config.env."
   echo "[preflight]       Available StorageClasses:"
   kubectl get storageclass --no-headers 2>/dev/null | awk '{print "                  " $1}' || true
@@ -93,10 +95,12 @@ TOTAL_MEM_GI=$(awk "BEGIN {printf \"%.0f\", $TOTAL_MEM_KI / 1048576}")
 
 ok "Total allocatable: ~${TOTAL_CPU} CPU cores, ~${TOTAL_MEM_GI}Gi RAM"
 
-# Kafka alone: BROKER_COUNT * (CPU_LIMIT + MEM_LIMIT)
-REQ_CPU=$((KAFKA_BROKER_COUNT * KAFKA_CPU_LIMIT))
-if [[ "$TOTAL_CPU" -gt 0 ]] && [[ "$TOTAL_CPU" -lt "$REQ_CPU" ]]; then
-  warn "Kafka needs ~${REQ_CPU} CPU cores; cluster has ~${TOTAL_CPU}. Pods may be pending."
+# Kafka alone: BROKER_COUNT * CPU_LIMIT — skip if Jaeger-only
+if [[ "${JAEGER_ONLY:-false}" == "false" ]]; then
+  REQ_CPU=$((KAFKA_BROKER_COUNT * KAFKA_CPU_LIMIT))
+  if [[ "$TOTAL_CPU" -gt 0 ]] && [[ "$TOTAL_CPU" -lt "$REQ_CPU" ]]; then
+    warn "Kafka needs ~${REQ_CPU} CPU cores; cluster has ~${TOTAL_CPU}. Pods may be pending."
+  fi
 fi
 
 # -----------------------------------------------------------------------------
@@ -114,6 +118,14 @@ if curl -sf --max-time 10 https://charts.konghq.com &>/dev/null; then
   ok "Kong Helm repo reachable"
 else
   warn "Cannot reach Kong Helm repo — check internet/proxy settings"
+fi
+
+if [[ "${JAEGER_ENABLED:-false}" == "true" || "${JAEGER_ONLY:-false}" == "true" ]]; then
+  if curl -sf --max-time 10 https://jaegertracing.github.io/helm-charts &>/dev/null; then
+    ok "Jaeger Helm repo reachable"
+  else
+    warn "Cannot reach Jaeger Helm repo — check internet/proxy settings"
+  fi
 fi
 
 # -----------------------------------------------------------------------------
