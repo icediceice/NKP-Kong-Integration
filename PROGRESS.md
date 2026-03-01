@@ -5,11 +5,12 @@
 
 ## Current Focus
 
-**Jaeger optional component added. Stack ready for customer hand-off.**
+**Full stack live on workload01 — Kafka + Kong + Jaeger all running.**
 
 ## Task Queue
 
-- [ ] Deploy Jaeger on cluster and validate endpoints
+- [x] Add Jaeger as optional component
+- [x] Deploy Jaeger on cluster and validate endpoints
 
 Installer proven on workload01 (bugs fixed) and workload02 (clean first-run, zero manual steps).
 KRaft quorum confirmed on both: ClusterId `3VgAlrpUR2e-uMprQQCBHQ`, voters [0,1,2].
@@ -29,6 +30,20 @@ Upcoming work in priority order:
 - ~~CI/CD pipeline~~
 
 ## Work Log
+
+### 2026-03-01 — Jaeger live deploy on workload01
+
+- **What:** `KUBECONFIG=auth/workload01.conf ./install.sh --jaeger-only` — clean first run.
+  Zero errors, zero warnings. All verify.sh checks passed including new Jaeger section.
+- **Result:**
+  - Jaeger 1/1 Running (pod: `jaeger-78978948c8-hfkbm`)
+  - LB IP assigned: `10.55.84.61`
+  - UI: `http://10.55.84.61:16686`
+  - OTLP gRPC: `10.55.84.61:4317`
+  - OTLP HTTP: `http://10.55.84.61:4318`
+  - Thrift HTTP: `http://10.55.84.61:14268/api/traces`
+- **Files:** `config.env` (added Jaeger block)
+- **Next:** Stack complete — Kafka + Kong + Jaeger live on workload01
 
 ### 2026-03-01 — Jaeger bug-fix pass (chart inspection, no live cluster)
 
