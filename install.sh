@@ -127,10 +127,9 @@ run_setup_wizard() {
 
   local sug_timeout=300; (( all_nodes > 5 )) && sug_timeout=600
 
-  # ── 2. Helm repos (needed for version queries below) ──────────────────────
+  # ── 2. Helm repos (Kong chart needed for version queries below) ───────────
   echo "  Adding Helm repositories..."
-  helm repo add confluentinc https://confluentinc.github.io/cp-helm-charts/ 2>/dev/null || true
-  helm repo add kong          https://charts.konghq.com                      2>/dev/null || true
+  helm repo add kong https://charts.konghq.com 2>/dev/null || true
   helm repo update -q 2>/dev/null || true
 
   # ── 3. Namespaces ─────────────────────────────────────────────────────────
@@ -233,31 +232,7 @@ run_setup_wizard() {
   # ── 6. Kafka ──────────────────────────────────────────────────────────────
   echo ""
   echo "  ── Kafka ───────────────────────────────────────────────────────────"
-
-  # Chart version
-  local wiz_kafka_ver="" kafka_versions=()
-  mapfile -t kafka_versions < <(
-    helm search repo confluentinc/cp-helm-charts --versions 2>/dev/null \
-      | awk 'NR>1 {print $2}' | head -5)
-  if [[ ${#kafka_versions[@]} -gt 0 ]]; then
-    local cur_kver; cur_kver="$(_cfg KAFKA_CHART_VERSION "")"; local cur_kver_idx=0
-    echo "  Chart version (cp-helm-charts):"
-    for i in "${!kafka_versions[@]}"; do
-      local tag=""; [[ $i -eq 0 ]] && tag+=" (latest)"
-      [[ "${kafka_versions[$i]}" == "$cur_kver" ]] && tag+=" (current)" && cur_kver_idx=$(( i + 1 ))
-      printf "    [%d] %s%s\n" "$(( i + 1 ))" "${kafka_versions[$i]}" "$tag"
-    done
-    echo ""
-    local kv_hint=$(( cur_kver_idx > 0 ? cur_kver_idx : 1 ))
-    read -rp "  Enter number [1-${#kafka_versions[@]}] (Enter for [$kv_hint]): " choice
-    [[ -z "$choice" ]] && choice=$kv_hint
-    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#kafka_versions[@]} )); then
-      wiz_kafka_ver="${kafka_versions[$((choice - 1))]}"
-      # If latest selected, leave blank so helm uses newest
-      [[ "$wiz_kafka_ver" == "${kafka_versions[0]}" ]] && wiz_kafka_ver=""
-    fi
-    echo "  → ${wiz_kafka_ver:-${kafka_versions[0]} (latest)}"
-  fi
+  echo "  Chart: kafka-kraft (local — charts/kafka-kraft/)"
 
   # Release name — detect existing releases in namespace
   local wiz_kafka_rel cur_kafka_rel
@@ -448,7 +423,7 @@ run_setup_wizard() {
   printf "  Storage class : %s\n"  "$wiz_storage_class"
   printf "  Service type  : %s\n"  "$wiz_service_type"
   echo   "  Kafka"
-  printf "    Release     : %s  (chart: %s)\n" "$wiz_kafka_rel" "${wiz_kafka_ver:-latest}"
+  printf "    Release     : %s  (chart: kafka-kraft, local)\n" "$wiz_kafka_rel"
   printf "    Brokers     : %s × CPU %s/%s  Memory %s/%s  Storage %s\n" \
     "$wiz_brokers" "$wiz_cpu_req" "$wiz_cpu_lim" "$wiz_mem_req" "$wiz_mem_lim" "$wiz_storage"
   printf "    Components  : control-center=%s  schema-registry=%s\n" "$wiz_cc" "$wiz_sr"
@@ -483,16 +458,12 @@ KAFKA_MEM_REQUEST=${wiz_mem_req}
 KAFKA_MEM_LIMIT=${wiz_mem_lim}
 KAFKA_CLUSTER_ID=
 KAFKA_RELEASE_NAME=${wiz_kafka_rel}
-KAFKA_CHART_VERSION=${wiz_kafka_ver}
 
 CC_ENABLED=${wiz_cc}
 CC_IMAGE=confluentinc/cp-enterprise-control-center:7.6.0
-CC_STORAGE_SIZE=10Gi
-CC_RELEASE_NAME=control-center
 
 SR_ENABLED=${wiz_sr}
 SR_IMAGE=confluentinc/cp-schema-registry:7.6.0
-SR_RELEASE_NAME=schema-registry
 
 KONG_MODE=${wiz_kong_mode}
 KONG_DB_MODE=${wiz_kong_db}
@@ -556,14 +527,10 @@ KAFKA_MEM_REQUEST="${KAFKA_MEM_REQUEST:-4Gi}"
 KAFKA_MEM_LIMIT="${KAFKA_MEM_LIMIT:-8Gi}"
 KAFKA_CLUSTER_ID="${KAFKA_CLUSTER_ID:-}"
 KAFKA_RELEASE_NAME="${KAFKA_RELEASE_NAME:-kafka}"
-KAFKA_CHART_VERSION="${KAFKA_CHART_VERSION:-}"
 CC_ENABLED="${CC_ENABLED:-true}"
 CC_IMAGE="${CC_IMAGE:-confluentinc/cp-enterprise-control-center:7.6.0}"
-CC_STORAGE_SIZE="${CC_STORAGE_SIZE:-10Gi}"
-CC_RELEASE_NAME="${CC_RELEASE_NAME:-control-center}"
 SR_ENABLED="${SR_ENABLED:-true}"
 SR_IMAGE="${SR_IMAGE:-confluentinc/cp-schema-registry:7.6.0}"
-SR_RELEASE_NAME="${SR_RELEASE_NAME:-schema-registry}"
 KONG_MODE="${KONG_MODE:-ingress}"
 KONG_DB_MODE="${KONG_DB_MODE:-dbless}"
 KONG_RELEASE_NAME="${KONG_RELEASE_NAME:-kong}"
@@ -574,9 +541,9 @@ ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-300}"
 export KAFKA_NAMESPACE KONG_NAMESPACE KAFKA_BROKER_COUNT KAFKA_IMAGE
 export KAFKA_STORAGE_CLASS KAFKA_STORAGE_SIZE KAFKA_CPU_REQUEST KAFKA_CPU_LIMIT
 export KAFKA_MEM_REQUEST KAFKA_MEM_LIMIT KAFKA_CLUSTER_ID KAFKA_RELEASE_NAME
-export KAFKA_CHART_VERSION CC_ENABLED CC_IMAGE CC_STORAGE_SIZE CC_RELEASE_NAME
-export SR_ENABLED SR_IMAGE SR_RELEASE_NAME KONG_MODE KONG_DB_MODE
-export KONG_RELEASE_NAME KONG_CHART_VERSION SERVICE_TYPE ROLLOUT_TIMEOUT
+export CC_ENABLED CC_IMAGE SR_ENABLED SR_IMAGE
+export KONG_MODE KONG_DB_MODE KONG_RELEASE_NAME KONG_CHART_VERSION
+export SERVICE_TYPE ROLLOUT_TIMEOUT
 export SCRIPT_DIR
 
 # -----------------------------------------------------------------------------
@@ -685,8 +652,7 @@ kubectl create namespace "$KONG_NAMESPACE"  --dry-run=client -o yaml | kubectl a
 # Add Helm repos
 # -----------------------------------------------------------------------------
 echo "[install.sh] Adding Helm repositories..."
-helm repo add confluentinc https://confluentinc.github.io/cp-helm-charts/ 2>/dev/null || true
-helm repo add kong          https://charts.konghq.com                      2>/dev/null || true
+helm repo add kong https://charts.konghq.com 2>/dev/null || true
 helm repo update
 
 # -----------------------------------------------------------------------------

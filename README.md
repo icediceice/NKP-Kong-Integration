@@ -114,6 +114,21 @@ detects it automatically and migrates:
 
 **This is a destructive migration — all existing Kafka data is lost.** Back up any data before running.
 
+## Diagnostics
+
+If something goes wrong, run the diagnostic collector:
+
+```bash
+bash scripts/diag.sh
+```
+
+This captures the full cluster state — all pod statuses, logs (including init container
+and previous crash logs), PVC/service status, KRaft quorum health, Helm values, and events
+— into a single timestamped file (`diag-<timestamp>.txt`).
+
+Paste that file to Claude with a description of the issue. Claude can diagnose and produce
+a targeted fix without needing cluster access.
+
 ## Docs
 
 - `docs/ARCHITECTURE.md` — namespace layout, resource names, port reference

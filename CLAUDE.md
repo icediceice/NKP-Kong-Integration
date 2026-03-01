@@ -21,6 +21,13 @@ Shell + Helm deployment kit for Kafka (KRaft, no ZooKeeper) + Kong OSS on Nutani
 bash scripts/preflight.sh
 ```
 
+## Diagnostics (requires live cluster)
+
+```bash
+# Collect full cluster state into diag-<timestamp>.txt for Claude review
+bash scripts/diag.sh
+```
+
 ## Validating Scripts (no cluster needed)
 
 ```bash
@@ -34,8 +41,9 @@ bash -n scripts/verify.sh
 # Lint with shellcheck (install: apt install shellcheck / brew install shellcheck)
 shellcheck install.sh scripts/*.sh
 
-# Dry-run Helm rendering (requires helm + valid kubeconfig)
-helm template kafka confluentinc/cp-kafka \
+# Dry-run Helm rendering (requires helm — no cluster needed)
+helm template kafka charts/kafka-kraft/ \
+  --set kafka.clusterId=testclusterid12345678 \
   --values helm-values/kafka-kraft.yaml \
   --namespace kafka
 
