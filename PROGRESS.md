@@ -5,7 +5,7 @@
 
 ## Current Focus
 
-**KRaft stack LIVE on workload01. All checks passing.**
+**KRaft stack LIVE. All checks passing. Docs and tooling complete.**
 
 True KRaft (no ZooKeeper), 3 brokers, Schema Registry, Control Center.
 KRaft quorum confirmed: ClusterId `3VgAlrpUR2e-uMprQQCBHQ`, voters [0,1,2].
