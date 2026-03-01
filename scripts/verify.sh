@@ -149,6 +149,53 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+section "Jaeger"
+# -----------------------------------------------------------------------------
+
+if [[ "${JAEGER_ENABLED:-false}" == "true" || "${JAEGER_ONLY:-false}" == "true" ]]; then
+  NOT_READY=$(kubectl get pods -n "${JAEGER_NAMESPACE:-observability}" \
+    -l "app.kubernetes.io/instance=${JAEGER_RELEASE_NAME:-jaeger}" \
+    --no-headers 2>/dev/null | { grep -v -E "Running|Completed" || true; } | wc -l)
+  NOT_READY=$((NOT_READY + 0))
+
+  if [[ "$NOT_READY" -gt 0 ]]; then
+    fail "Jaeger pod(s) not Running"
+    kubectl get pods -n "${JAEGER_NAMESPACE:-observability}" 2>/dev/null || true
+  else
+    RUNNING=$(kubectl get pods -n "${JAEGER_NAMESPACE:-observability}" \
+      -l "app.kubernetes.io/instance=${JAEGER_RELEASE_NAME:-jaeger}" \
+      --no-headers 2>/dev/null | wc -l)
+    pass "$RUNNING Jaeger pod(s) Running"
+
+    # Determine service name based on strategy
+    STRATEGY="${JAEGER_STRATEGY:-allInOne}"
+    if [[ "$STRATEGY" == "allInOne" ]]; then
+      JAEGER_SVC="${JAEGER_RELEASE_NAME:-jaeger}-query"
+    else
+      JAEGER_SVC="${JAEGER_RELEASE_NAME:-jaeger}-query"
+    fi
+
+    JAEGER_IP=$(kubectl get svc -n "${JAEGER_NAMESPACE:-observability}" \
+      "$JAEGER_SVC" \
+      -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+    JAEGER_PORT=$(kubectl get svc -n "${JAEGER_NAMESPACE:-observability}" \
+      "$JAEGER_SVC" \
+      -o jsonpath='{.spec.ports[?(@.name=="http-query")].port}' 2>/dev/null || echo "16686")
+    JAEGER_PORT="${JAEGER_PORT:-16686}"
+
+    if [[ -n "$JAEGER_IP" ]]; then
+      info "Jaeger UI: http://${JAEGER_IP}:${JAEGER_PORT}"
+      info "Jaeger OTLP gRPC collector: ${JAEGER_IP}:4317"
+      info "Jaeger OTLP HTTP collector: http://${JAEGER_IP}:4318"
+    else
+      info "Jaeger UI LB IP not yet assigned — run: kubectl get svc -n ${JAEGER_NAMESPACE:-observability} $JAEGER_SVC"
+    fi
+  fi
+else
+  info "Jaeger not enabled (JAEGER_ENABLED=false)"
+fi
+
+# -----------------------------------------------------------------------------
 section "Summary"
 # -----------------------------------------------------------------------------
 

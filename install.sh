@@ -310,6 +310,9 @@ run_setup_wizard() {
   echo "  ── Components ──────────────────────────────────────────────────────"
   local cur_cc; cur_cc="$(_cfg CC_ENABLED true)"; local wiz_cc
   local cur_sr; cur_sr="$(_cfg SR_ENABLED true)"; local wiz_sr
+  local cur_jaeger; cur_jaeger="$(_cfg JAEGER_ENABLED false)"; local wiz_jaeger
+  local cur_jaeger_strategy; cur_jaeger_strategy="$(_cfg JAEGER_STRATEGY allInOne)"
+  local wiz_jaeger_strategy
 
   local cc_hint="Y/n"; [[ "$cur_cc" == "false" ]] && cc_hint="y/N"
   read -rp "  Enable Control Center (Kafka management UI)? [$cc_hint]: " yn
@@ -322,6 +325,26 @@ run_setup_wizard() {
   if   [[ -z "$yn" ]];                            then wiz_sr="$cur_sr"
   elif [[ "${yn,,}" == "n" || "${yn,,}" == "no" ]]; then wiz_sr="false"
   else wiz_sr="true"; fi
+
+  local jaeger_hint="y/N"; [[ "$cur_jaeger" == "true" ]] && jaeger_hint="Y/n"
+  read -rp "  Enable Jaeger (distributed tracing)? [$jaeger_hint]: " yn
+  if   [[ -z "$yn" ]];                            then wiz_jaeger="$cur_jaeger"
+  elif [[ "${yn,,}" == "n" || "${yn,,}" == "no" ]]; then wiz_jaeger="false"
+  else wiz_jaeger="true"; fi
+
+  wiz_jaeger_strategy="$cur_jaeger_strategy"
+  if [[ "$wiz_jaeger" == "true" ]]; then
+    local jaeger_strat_def=1; [[ "$cur_jaeger_strategy" == "production" ]] && jaeger_strat_def=2
+    echo "  Jaeger strategy:"
+    echo "    [1] allInOne   — Single pod, in-memory storage (POC default)"
+    echo "    [2] production — Separate components with Elasticsearch backend"
+    read -rp "  Enter number [1-2] (Enter for [$jaeger_strat_def]): " choice
+    case "${choice:-$jaeger_strat_def}" in
+      2) wiz_jaeger_strategy="production" ;;
+      *) wiz_jaeger_strategy="allInOne" ;;
+    esac
+    echo "  → $wiz_jaeger_strategy"
+  fi
 
   # ── 8. Kong ───────────────────────────────────────────────────────────────
   echo ""
@@ -427,6 +450,7 @@ run_setup_wizard() {
   printf "    Brokers     : %s × CPU %s/%s  Memory %s/%s  Storage %s\n" \
     "$wiz_brokers" "$wiz_cpu_req" "$wiz_cpu_lim" "$wiz_mem_req" "$wiz_mem_lim" "$wiz_storage"
   printf "    Components  : control-center=%s  schema-registry=%s\n" "$wiz_cc" "$wiz_sr"
+  printf "  Jaeger        : enabled=%s  strategy=%s\n" "$wiz_jaeger" "$wiz_jaeger_strategy"
   echo   "  Kong"
   printf "    Release     : %s  (chart: %s)\n" "$wiz_kong_rel" "${wiz_kong_ver:-latest}"
   printf "    Mode        : %s / %s\n"          "$wiz_kong_mode" "$wiz_kong_db"
@@ -470,6 +494,12 @@ KONG_DB_MODE=${wiz_kong_db}
 KONG_RELEASE_NAME=${wiz_kong_rel}
 KONG_CHART_VERSION=${wiz_kong_ver}
 
+JAEGER_ENABLED=${wiz_jaeger}
+JAEGER_NAMESPACE=observability
+JAEGER_RELEASE_NAME=jaeger
+JAEGER_STRATEGY=${wiz_jaeger_strategy}
+JAEGER_STORAGE_TYPE=elasticsearch
+
 SERVICE_TYPE=${wiz_service_type}
 ROLLOUT_TIMEOUT=${wiz_timeout}
 EOF
@@ -485,6 +515,7 @@ EOF
 SKIP_PREFLIGHT=false
 KAFKA_ONLY=false
 KONG_ONLY=false
+JAEGER_ONLY=false
 RECONFIGURE=false
 
 for arg in "$@"; do
@@ -492,6 +523,7 @@ for arg in "$@"; do
     --skip-preflight) SKIP_PREFLIGHT=true ;;
     --kafka-only)     KAFKA_ONLY=true ;;
     --kong-only)      KONG_ONLY=true ;;
+    --jaeger-only)    JAEGER_ONLY=true ;;
     --reconfigure)    RECONFIGURE=true ;;
     *) echo "[install.sh] Unknown argument: $arg" >&2; exit 1 ;;
   esac
@@ -535,15 +567,24 @@ KONG_MODE="${KONG_MODE:-ingress}"
 KONG_DB_MODE="${KONG_DB_MODE:-dbless}"
 KONG_RELEASE_NAME="${KONG_RELEASE_NAME:-kong}"
 KONG_CHART_VERSION="${KONG_CHART_VERSION:-}"
+JAEGER_ENABLED="${JAEGER_ENABLED:-false}"
+JAEGER_NAMESPACE="${JAEGER_NAMESPACE:-observability}"
+JAEGER_RELEASE_NAME="${JAEGER_RELEASE_NAME:-jaeger}"
+JAEGER_STRATEGY="${JAEGER_STRATEGY:-allInOne}"
+JAEGER_STORAGE_TYPE="${JAEGER_STORAGE_TYPE:-elasticsearch}"
 SERVICE_TYPE="${SERVICE_TYPE:-LoadBalancer}"
 ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-300}"
+
+# --jaeger-only: force Jaeger on and skip Kafka/Kong installs
+[[ "$JAEGER_ONLY" == "true" ]] && JAEGER_ENABLED="true"
 
 export KAFKA_NAMESPACE KONG_NAMESPACE KAFKA_BROKER_COUNT KAFKA_IMAGE
 export KAFKA_STORAGE_CLASS KAFKA_STORAGE_SIZE KAFKA_CPU_REQUEST KAFKA_CPU_LIMIT
 export KAFKA_MEM_REQUEST KAFKA_MEM_LIMIT KAFKA_CLUSTER_ID KAFKA_RELEASE_NAME
 export CC_ENABLED CC_IMAGE SR_ENABLED SR_IMAGE
 export KONG_MODE KONG_DB_MODE KONG_RELEASE_NAME KONG_CHART_VERSION
-export SERVICE_TYPE ROLLOUT_TIMEOUT
+export JAEGER_ENABLED JAEGER_NAMESPACE JAEGER_RELEASE_NAME JAEGER_STRATEGY JAEGER_STORAGE_TYPE
+export SERVICE_TYPE ROLLOUT_TIMEOUT JAEGER_ONLY
 export SCRIPT_DIR
 
 # -----------------------------------------------------------------------------
@@ -647,18 +688,24 @@ fi
 echo "[install.sh] Creating namespaces..."
 kubectl create namespace "$KAFKA_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 kubectl create namespace "$KONG_NAMESPACE"  --dry-run=client -o yaml | kubectl apply -f -
+if [[ "$JAEGER_ENABLED" == "true" ]]; then
+  kubectl create namespace "$JAEGER_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+fi
 
 # -----------------------------------------------------------------------------
 # Add Helm repos
 # -----------------------------------------------------------------------------
 echo "[install.sh] Adding Helm repositories..."
 helm repo add kong https://charts.konghq.com 2>/dev/null || true
+if [[ "$JAEGER_ENABLED" == "true" ]]; then
+  helm repo add jaegertracing https://jaegertracing.github.io/helm-charts 2>/dev/null || true
+fi
 helm repo update
 
 # -----------------------------------------------------------------------------
 # Install Kafka stack
 # -----------------------------------------------------------------------------
-if [[ "$KONG_ONLY" == "false" ]]; then
+if [[ "$KONG_ONLY" == "false" && "$JAEGER_ONLY" == "false" ]]; then
   echo "[install.sh] Installing Kafka stack..."
   bash "${SCRIPT_DIR}/scripts/install-kafka.sh"
   echo "[install.sh] Kafka stack installed."
@@ -667,10 +714,19 @@ fi
 # -----------------------------------------------------------------------------
 # Install Kong
 # -----------------------------------------------------------------------------
-if [[ "$KAFKA_ONLY" == "false" ]]; then
+if [[ "$KAFKA_ONLY" == "false" && "$JAEGER_ONLY" == "false" ]]; then
   echo "[install.sh] Installing Kong..."
   bash "${SCRIPT_DIR}/scripts/install-kong.sh"
   echo "[install.sh] Kong installed."
+fi
+
+# -----------------------------------------------------------------------------
+# Install Jaeger (optional)
+# -----------------------------------------------------------------------------
+if [[ "$JAEGER_ENABLED" == "true" ]]; then
+  echo "[install.sh] Installing Jaeger (strategy: ${JAEGER_STRATEGY})..."
+  bash "${SCRIPT_DIR}/scripts/install-jaeger.sh"
+  echo "[install.sh] Jaeger installed."
 fi
 
 # -----------------------------------------------------------------------------
@@ -684,9 +740,44 @@ echo "[install.sh] ============================================================"
 echo "[install.sh]  Kongka stack installation complete."
 echo "[install.sh] ============================================================"
 echo ""
-echo "  Kafka namespace : $KAFKA_NAMESPACE"
-echo "  Kong namespace  : $KONG_NAMESPACE"
-echo ""
-echo "  Control Center  : kubectl get svc -n $KAFKA_NAMESPACE ${KAFKA_RELEASE_NAME}-cc-lb"
-echo "  Kong proxy      : kubectl get svc -n $KONG_NAMESPACE $KONG_RELEASE_NAME-kong-proxy"
+
+if [[ "$JAEGER_ONLY" == "false" ]]; then
+  echo "  Kafka namespace : $KAFKA_NAMESPACE"
+  echo "  Kong namespace  : $KONG_NAMESPACE"
+  echo ""
+  echo "  Endpoints:"
+  if [[ "${CC_ENABLED:-true}" == "true" ]]; then
+    CC_IP=$(kubectl get svc -n "$KAFKA_NAMESPACE" "${KAFKA_RELEASE_NAME}-cc-lb" \
+      -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+    if [[ -n "$CC_IP" ]]; then
+      echo "    Control Center  : http://${CC_IP}:9021"
+    else
+      echo "    Control Center  : kubectl get svc -n $KAFKA_NAMESPACE ${KAFKA_RELEASE_NAME}-cc-lb"
+    fi
+  fi
+  KONG_IP=$(kubectl get svc -n "$KONG_NAMESPACE" "${KONG_RELEASE_NAME}-kong-proxy" \
+    -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+  if [[ -n "$KONG_IP" ]]; then
+    echo "    Kong proxy      : http://${KONG_IP}"
+  else
+    echo "    Kong proxy      : kubectl get svc -n $KONG_NAMESPACE ${KONG_RELEASE_NAME}-kong-proxy"
+  fi
+fi
+
+if [[ "$JAEGER_ENABLED" == "true" ]]; then
+  echo "  Jaeger namespace: $JAEGER_NAMESPACE"
+  JAEGER_IP=$(kubectl get svc -n "$JAEGER_NAMESPACE" "${JAEGER_RELEASE_NAME}-query" \
+    -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+  echo ""
+  echo "  Jaeger endpoints:"
+  if [[ -n "$JAEGER_IP" ]]; then
+    echo "    UI (traces)     : http://${JAEGER_IP}:16686"
+    echo "    OTLP gRPC       : ${JAEGER_IP}:4317"
+    echo "    OTLP HTTP       : http://${JAEGER_IP}:4318"
+    echo "    Thrift HTTP     : http://${JAEGER_IP}:14268/api/traces"
+  else
+    echo "    kubectl get svc -n $JAEGER_NAMESPACE ${JAEGER_RELEASE_NAME}-query"
+  fi
+fi
+
 echo ""

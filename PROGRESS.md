@@ -5,7 +5,11 @@
 
 ## Current Focus
 
-**Stack validated on two independent clusters. Ready for customer hand-off.**
+**Jaeger optional component added. Stack ready for customer hand-off.**
+
+## Task Queue
+
+- [ ] Deploy Jaeger on cluster and validate endpoints
 
 Installer proven on workload01 (bugs fixed) and workload02 (clean first-run, zero manual steps).
 KRaft quorum confirmed on both: ClusterId `3VgAlrpUR2e-uMprQQCBHQ`, voters [0,1,2].
@@ -25,6 +29,22 @@ Upcoming work in priority order:
 - ~~CI/CD pipeline~~
 
 ## Work Log
+
+### 2026-03-01 — Jaeger optional component
+
+- **What:** Added Jaeger distributed tracing as an optional workflow.
+  - `helm-values/jaeger.yaml` — static values (resources, image pin, OTLP env)
+  - `scripts/install-jaeger.sh` — Helm install script; supports `allInOne` (POC, in-memory)
+    and `production` (separate collector/query with Elasticsearch or Cassandra backend)
+  - `install.sh` — `--jaeger-only` flag, wizard Y/N + strategy prompt, defaults,
+    exports, namespace/repo/install step, endpoint summary block
+  - `scripts/verify.sh` — Jaeger pod + IP section (conditional on `JAEGER_ENABLED`)
+  - `config.env.example` — Jaeger section with all variables documented
+- **Design:** `JAEGER_ENABLED=false` by default. Users opt in via config.env or `--jaeger-only`.
+  Endpoint URLs printed after install: UI :16686, OTLP gRPC :4317, OTLP HTTP :4318.
+- **Files:** `helm-values/jaeger.yaml`, `scripts/install-jaeger.sh`, `install.sh`,
+  `scripts/verify.sh`, `config.env.example`
+- **Next:** Deploy Jaeger on cluster and validate endpoints
 
 ### 2026-03-01 — workload02 clean install validation
 
