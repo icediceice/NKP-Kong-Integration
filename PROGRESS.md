@@ -5,11 +5,11 @@
 
 ## Current Focus
 
-**KRaft stack LIVE. All checks passing. Docs and tooling complete.**
+**Stack validated on two independent clusters. Ready for customer hand-off.**
 
-True KRaft (no ZooKeeper), 3 brokers, Schema Registry, Control Center.
-KRaft quorum confirmed: ClusterId `3VgAlrpUR2e-uMprQQCBHQ`, voters [0,1,2].
-install.sh --kafka-only idempotent upgrade: exit 0. verify.sh: All checks passed.
+Installer proven on workload01 (bugs fixed) and workload02 (clean first-run, zero manual steps).
+KRaft quorum confirmed on both: ClusterId `3VgAlrpUR2e-uMprQQCBHQ`, voters [0,1,2].
+verify.sh: All checks passed on both clusters.
 
 ## Task Queue
 
@@ -25,6 +25,24 @@ Upcoming work in priority order:
 - ~~CI/CD pipeline~~
 
 ## Work Log
+
+### 2026-03-01 — workload02 clean install validation
+
+#### Session — second-cluster proof
+
+- **What:** Ran `KUBECONFIG=auth/workload02.conf ./install.sh` against fresh workload02 cluster
+  (NKP K8s 1.34.1, Nutanix volumes, 7 nodes — same platform as workload01). Zero manual
+  intervention. Used existing config.env and same cluster ID from `.kafka-cluster-id`.
+- **Result:** `verify.sh: All checks passed.`
+  - Preflight: 0 errors, 0 warnings
+  - Kafka KRaft: 3/3 brokers Running, quorum confirmed (ClusterId `3VgAlrpUR2e-uMprQQCBHQ`)
+  - Schema Registry: 1/1 Running
+  - Control Center: 1/1 Running, LB: `10.55.84.79:9021`
+  - Kong: 1/1 Running, LB: `10.55.84.80`
+  - Kong CRD adoption loop handled pre-installed CRDs cleanly
+  - Total time: ~6 minutes, no manual steps
+- **Files:** No code changes — installer ran without modification
+- **Next:** Stack validated on two clusters. Ready for customer hand-off.
 
 ### 2026-03-01 — KRaft live install + bug fixes
 
