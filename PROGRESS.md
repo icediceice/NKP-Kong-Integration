@@ -5,18 +5,17 @@
 
 ## Current Focus
 
-**⚠️ Customer deployment Monday 2026-03-03 — prep session Sunday 2026-03-02**
+**Stack is LIVE on workload01. Ready for Monday 2026-03-03 customer deployment.**
 
-Scope confirmed: deploy platform, expose Kong proxy as LoadBalancer endpoint, hand off
-to customer. No integration wiring needed — customer will explore the platform themselves.
+All components verified running. Installer is clean and idempotent. Hand-off ready.
 
 ## Task Queue
 
 Upcoming work in priority order:
 
 - [x] Install crawl4ai and scrape docs into `docs/reference/` — 8 files scraped + uploaded to NotebookLM
-- [ ] End-to-end deployment dry-run — verify full stack comes up cleanly on NKP
-- [ ] Confirm Kong proxy is exposed as LoadBalancer and LB IP is reachable
+- [x] End-to-end deployment dry-run — verify full stack comes up cleanly on NKP
+- [x] Confirm Kong proxy is exposed as LoadBalancer and LB IP is reachable
 
 **Out of scope (customer does their own integration):**
 - ~~Protocol/integration wiring (Kafka ↔ Kong routes, topics, consumers)~~
@@ -26,6 +25,29 @@ Upcoming work in priority order:
 ## Work Log
 
 ### 2026-03-01
+
+#### Session — end-to-end deployment + installer fixes
+
+- **What:** Ran full installer against workload01 (NKP K8s 1.34.1). Found and fixed 9 issues:
+  1. CRLF line endings on all scripts → `sed -i 's/\r$//'` + `.gitattributes`
+  2. Helm not installed → installed via official script
+  3. StorageClass `default` not found → `KAFKA_STORAGE_CLASS=nutanix-volume` in config.env
+  4. Wrong chart structure → rewrote install-kafka.sh to use `cp-helm-charts` umbrella chart
+  5. `policy/v1beta1` PodDisruptionBudget removed in K8s 1.25+ → auto-patch on chart download
+  6. ConfluentMetricsReporter ClassNotFoundException → use `cp-server:7.6.0` image
+  7. JMX sidecar CrashLoopBackOff → disabled in schema-registry.yaml + control-center.yaml
+  8. Schema Registry NotEnoughReplicasException → `min.insync.replicas=1` + `kafkastore.topic.replication.factor=1`
+  9. Kong CRD ownership conflict → CRD adoption loop in install-kong.sh + `--skip-crds`
+  10. verify.sh arithmetic error (`0\n0`) → `{ grep ... || true; } | wc -l` pattern
+- **Result:** `verify.sh: All checks passed.`
+  - ZooKeeper 3/3 Running, Kafka 3/3 Running, Schema Registry 1/1 Running
+  - Control Center 1/1 Running, LB: `10.55.84.59:9021`
+  - Kong 1/1 Running, LB: `10.55.84.60` (404 expected, no routes)
+- **Files:** `.gitattributes`, `.gitignore`, `config.env.example`, `install.sh`,
+  `scripts/install-kafka.sh`, `scripts/install-kong.sh`, `scripts/verify.sh`,
+  `helm-values/kafka-kraft.yaml`, `helm-values/schema-registry.yaml`, `helm-values/control-center.yaml`
+- **Commit:** `3b33e2e` — fix: make installer work on NKP 1.34 cluster end-to-end
+- **Next:** Stack is live — ready for Monday customer hand-off
 
 #### Session end — pre-deployment prep
 - **What:** Discipline audit only (project-init). Repo is clean, docs complete, notebook
