@@ -11,6 +11,65 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 trap 'echo "[install.sh] ERROR: install failed at line $LINENO. Check output above." >&2' ERR
 
 # -----------------------------------------------------------------------------
+# Cluster selection
+# Scans auth/ for kubeconfig files and prompts the user to select one.
+# Skipped if KUBECONFIG is already set in the environment.
+# -----------------------------------------------------------------------------
+pick_cluster() {
+  local auth_dir="${SCRIPT_DIR}/auth"
+
+  if [[ ! -d "$auth_dir" ]]; then
+    echo "[install.sh] No auth/ directory found — using default kubeconfig"
+    return
+  fi
+
+  mapfile -t kubeconfigs < <(find "$auth_dir" -maxdepth 1 \( -name "*.conf" -o -name "*.yaml" \) | sort)
+
+  if [[ ${#kubeconfigs[@]} -eq 0 ]]; then
+    echo "[install.sh] No kubeconfig files in auth/ — using default kubeconfig"
+    return
+  fi
+
+  if [[ ${#kubeconfigs[@]} -eq 1 ]]; then
+    export KUBECONFIG="${kubeconfigs[0]}"
+    echo "[install.sh] Auto-selected cluster: $(basename "$KUBECONFIG")"
+    return
+  fi
+
+  echo ""
+  echo "Select a cluster:"
+  echo ""
+  local i=1
+  for kc in "${kubeconfigs[@]}"; do
+    local name server
+    name=$(kubectl config view --kubeconfig="$kc" -o jsonpath='{.clusters[0].name}' 2>/dev/null || true)
+    server=$(kubectl config view --kubeconfig="$kc" -o jsonpath='{.clusters[0].cluster.server}' 2>/dev/null || true)
+    name="${name:-$(basename "$kc" .conf)}"
+    server="${server:-unknown}"
+    printf "  [%d] %-30s %s\n" "$i" "$(basename "$kc")" "$name  ($server)"
+    (( i++ ))
+  done
+  echo ""
+
+  local choice
+  while true; do
+    read -rp "Enter number [1-${#kubeconfigs[@]}]: " choice
+    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#kubeconfigs[@]} )); then
+      export KUBECONFIG="${kubeconfigs[$((choice - 1))]}"
+      echo "[install.sh] Using cluster: $(basename "$KUBECONFIG")"
+      break
+    fi
+    echo "  Invalid — enter a number between 1 and ${#kubeconfigs[@]}."
+  done
+}
+
+if [[ -n "${KUBECONFIG:-}" ]]; then
+  echo "[install.sh] Using cluster from environment: $KUBECONFIG"
+else
+  pick_cluster
+fi
+
+# -----------------------------------------------------------------------------
 # Flags
 # -----------------------------------------------------------------------------
 SKIP_PREFLIGHT=false
