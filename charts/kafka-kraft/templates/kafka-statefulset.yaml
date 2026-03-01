@@ -32,12 +32,30 @@ spec:
             - -c
             - |
               set -e
-              if [ -f /var/lib/kafka/data/meta.properties ]; then
+              # meta.properties is written to metadata.log.dir, not log.dirs
+              if [ -f /var/lib/kafka/metadata/meta.properties ]; then
                 echo "[init] Storage already formatted — skipping."
                 exit 0
               fi
               echo "[init] Formatting KRaft storage with cluster ID: ${CLUSTER_ID}"
-              printf 'log.dirs=/var/lib/kafka/data\nmetadata.log.dir=/var/lib/kafka/metadata\n' \
+              # kafka-storage format validates the full broker config — must include
+              # process.roles, advertised.listeners (non-0.0.0.0), etc.
+              # $HOSTNAME is available in init containers (same pod name as main container).
+              FQDN="${HOSTNAME}.{{ include "kafka-kraft.headlessServiceName" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+              NODE_ID="${HOSTNAME##*-}"
+              # log.dirs uses a subdirectory to avoid ext4 lost+found at the PVC root
+              mkdir -p /var/lib/kafka/data/logs
+              printf '%s\n' \
+                'process.roles=broker,controller' \
+                "node.id=${NODE_ID}" \
+                "controller.quorum.voters=${NODE_ID}@localhost:9093" \
+                'listeners=BROKER://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093' \
+                "advertised.listeners=BROKER://${FQDN}:9092" \
+                'inter.broker.listener.name=BROKER' \
+                'controller.listener.names=CONTROLLER' \
+                'listener.security.protocol.map=BROKER:PLAINTEXT,CONTROLLER:PLAINTEXT' \
+                'log.dirs=/var/lib/kafka/data/logs' \
+                'metadata.log.dir=/var/lib/kafka/metadata' \
                 > /tmp/kraft.properties
               kafka-storage format \
                 --cluster-id "${CLUSTER_ID}" \
@@ -83,7 +101,7 @@ spec:
             - name: KAFKA_CONTROLLER_LISTENER_NAMES
               value: "CONTROLLER"
             - name: KAFKA_LOG_DIRS
-              value: "/var/lib/kafka/data"
+              value: "/var/lib/kafka/data/logs"
             - name: KAFKA_METADATA_LOG_DIR
               value: "/var/lib/kafka/metadata"
             # Cluster ID — read by the Confluent entrypoint for validation

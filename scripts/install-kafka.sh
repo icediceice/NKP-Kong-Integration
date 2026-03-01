@@ -94,6 +94,22 @@ if helm status "$KAFKA_RELEASE_NAME" -n "$KAFKA_NAMESPACE" &>/dev/null; then
 fi
 
 # -----------------------------------------------------------------------------
+# Pre-install cleanup: remove services that were created by kubectl apply
+# (not Helm-managed) in earlier versions of this installer.
+# Helm cannot adopt them — they must be deleted before helm upgrade --install.
+# -----------------------------------------------------------------------------
+for orphan_svc in "${KAFKA_RELEASE_NAME}-cc-lb"; do
+  if kubectl get svc "$orphan_svc" -n "$KAFKA_NAMESPACE" &>/dev/null; then
+    helm_owner=$(kubectl get svc "$orphan_svc" -n "$KAFKA_NAMESPACE" \
+      -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-name}' 2>/dev/null || echo "")
+    if [[ -z "$helm_owner" ]]; then
+      echo "[install-kafka] Removing non-Helm-managed service: $orphan_svc"
+      kubectl delete svc "$orphan_svc" -n "$KAFKA_NAMESPACE"
+    fi
+  fi
+done
+
+# -----------------------------------------------------------------------------
 # Deploy: Kafka (KRaft) + Schema Registry + Control Center
 # Single Helm release from the local chart.
 # -----------------------------------------------------------------------------
