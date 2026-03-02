@@ -15,6 +15,9 @@ Thumbs.db
 *.key
 config.env
 
+# Kubeconfig / cluster auth files
+auth/
+
 # Project runtime artifacts
 .kafka-cluster-id
 .cache/
